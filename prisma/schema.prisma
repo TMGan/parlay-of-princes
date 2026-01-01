@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      Role     @default(USER)
+  inviteCodeUsed String?
+  
+  totalPoints Int @default(0)
+  betsWon     Int @default(0)
+  betsLost    Int @default(0)
+  biggestHit  Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  bets Bet[]
+  
+  @@index([totalPoints])
+  @@index([username])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Bet {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  weekNumber  Int
+  sport       String
+  description String
+  
+  oddsAmerican Int
+  oddsLocked   Int
+  
+  isKingLock    Boolean @default(false)
+  isBonusBet    Boolean @default(false)
+  bonusBetId    String?
+  
+  status         BetStatus @default(PENDING)
+  pointsAwarded  Int?
+  
+  gameStartTime DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  resolvedAt    DateTime?
+  
+  @@index([userId, weekNumber])
+  @@index([status])
+  @@index([gameStartTime])
+}
+
+enum BetStatus {
+  PENDING
+  WON
+  LOST
+  VOIDED
+}
+
+model League {
+  id         String   @id @default(cuid())
+  name       String
+  seasonYear Int
+  startDate  DateTime
+  endDate    DateTime
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BonusBet {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  parameters  String   @db.Text
+  
+  availableDate DateTime
+  expiryDate    DateTime
+  
+  createdByUserId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([availableDate, expiryDate])
+}
+
+model InviteCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  usedBy    String?
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+  
+  @@index([code])
+}
