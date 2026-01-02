@@ -4,7 +4,7 @@ import { deleteBet } from '@/lib/db/queries';
 import { prisma } from '@/lib/db/client';
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ betId: string }> }
 ) {
   try {
