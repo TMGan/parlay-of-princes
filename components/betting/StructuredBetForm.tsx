@@ -212,9 +212,9 @@ export function StructuredBetForm({
                 setSelectedSport('');
                 setGames([]);
               }}
-              className="ml-2 text-xs text-gray-400 hover:text-white"
-            >
-              (Change Sport)
+              className="ml-3 px-3 py-1 text-xs bg-background border border-primary/50 text-primary rounded hover:bg-primary/10 transition-colors"
+>
+  ← Change Sport
             </button>
           </label>
 
@@ -256,9 +256,9 @@ export function StructuredBetForm({
                 setSelectedGame(null);
                 setProps([]);
               }}
-              className="ml-2 text-xs text-gray-400 hover:text-white"
-            >
-              (Change Game)
+              className="ml-3 px-3 py-1 text-xs bg-background border border-primary/50 text-primary rounded hover:bg-primary/10 transition-colors"
+>
+  ← Change Game
             </button>
           </label>
 
