@@ -14,7 +14,7 @@ const highlights = [
     body: "Climb past rivals, claim your banner, and defend the throne week after week.",
     tone: "accent"
   }
-];
+]
 
 export default function Home() {
   return (
@@ -74,51 +74,119 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="card glass grid gap-6 p-8 md:grid-cols-2 md:items-center">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-primary">Live edge tracking</h2>
-            <p className="text-foreground/75">
-              Monitor odds movement, implied probability, and payout projections in real time. See
-              how every leg sharpens your parlay before you lock it in.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <span className="pill">Dynamic odds</span>
-              <span className="pill">CLV insights</span>
-              <span className="pill">Projected payout</span>
+        <section className="space-y-8">
+          <div className="card p-8 lg:p-12">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <h2 className="text-3xl lg:text-4xl font-bold mb-6">
+                  <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Weekly Competition</span>
+                </h2>
+                <p className="text-gray-300 text-lg mb-8">
+                  Place your picks every week, climb the leaderboard, and compete for the crown. Every Monday starts fresh with new opportunities to dominate.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary" />
+                    <div>
+                      <h3 className="font-semibold text-white mb-1">3 Regular Picks</h3>
+                      <p className="text-gray-400 text-sm">Choose your best bets across NFL, NBA, MLB, and NHL</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-secondary" />
+                    <div>
+                      <h3 className="font-semibold text-white mb-1">1 King Lock 👑</h3>
+                      <p className="text-gray-400 text-sm">Your most confident pick earns 2x points</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-accent" />
+                    <div>
+                      <h3 className="font-semibold text-white mb-1">Parlay of Princes Bonus</h3>
+                      <p className="text-gray-400 text-sm">Hit all 4 picks to double your weekly points</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-background-light rounded-xl p-6 border border-gray-800">
+                <div className="text-center mb-6">
+                  <div className="text-sm text-gray-400 uppercase tracking-wide mb-2">Example Week</div>
+                  <div className="text-2xl font-bold text-primary">Week 52 Results</div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-800">
+                    <div>
+                      <div className="text-sm text-gray-400">Regular Pick 1</div>
+                      <div className="font-medium">Chiefs ML (+150)</div>
+                    </div>
+                    <div className="text-green-500 font-bold">+150 pts</div>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-gray-800">
+                    <div>
+                      <div className="text-sm text-gray-400">Regular Pick 2</div>
+                      <div className="font-medium">Lakers +5.5 (+110)</div>
+                    </div>
+                    <div className="text-green-500 font-bold">+110 pts</div>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-gray-800">
+                    <div>
+                      <div className="text-sm text-gray-400">Regular Pick 3</div>
+                      <div className="font-medium">Over 9.5 (+120)</div>
+                    </div>
+                    <div className="text-red-500 font-bold">0 pts</div>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b border-gray-800">
+                    <div>
+                      <div className="text-sm text-gray-400">👑 King Lock</div>
+                      <div className="font-medium">Mahomes Over 2.5 TDs (+200)</div>
+                    </div>
+                    <div className="text-green-500 font-bold">+400 pts</div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 text-lg">
+                    <div className="font-bold">Weekly Total</div>
+                    <div className="text-primary font-bold text-xl">+660 pts</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="grid gap-3 rounded-xl border border-border/80 bg-gradient-to-br from-primary/10 via-background to-background p-4 shadow-lg">
-            <div className="flex items-center justify-between rounded-lg border border-border/70 bg-black/30 px-4 py-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-foreground/60">Stake</p>
-                <p className="text-xl font-semibold">$100.00</p>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="card p-6 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🎯</span>
               </div>
-              <div className="text-right">
-                <p className="text-xs uppercase tracking-wide text-foreground/60">Potential</p>
-                <p className="text-xl font-semibold text-secondary">$725.00</p>
-              </div>
+              <h3 className="text-xl font-bold mb-2">Browse Live Odds</h3>
+              <p className="text-gray-400">Real-time odds from major sportsbooks for NFL, NBA, MLB, and NHL games</p>
             </div>
-            <div className="rounded-lg border border-border/70 bg-black/30 p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-foreground/80">Leg 1 · Moneyline</span>
-                <span className="text-primary">+140</span>
+
+            <div className="card p-6 text-center">
+              <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">📊</span>
               </div>
-              <div className="mt-2 flex items-center justify-between text-sm">
-                <span className="text-foreground/80">Leg 2 · Points</span>
-                <span className="text-primary">+105</span>
+              <h3 className="text-xl font-bold mb-2">Track Performance</h3>
+              <p className="text-gray-400">See your total points, wins, losses, win rate, and biggest hits on the dashboard</p>
+            </div>
+
+            <div className="card p-6 text-center">
+              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🏆</span>
               </div>
-              <div className="mt-2 flex items-center justify-between text-sm">
-                <span className="text-foreground/80">Leg 3 · Total</span>
-                <span className="text-primary">-110</span>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-sm">
-                <span className="text-foreground/70">Implied probability</span>
-                <span className="font-semibold text-secondary">24%</span>
-              </div>
+              <h3 className="text-xl font-bold mb-2">Compete & Win</h3>
+              <p className="text-gray-400">Climb the leaderboard week after week. Season runs January through December</p>
             </div>
           </div>
         </section>
       </div>
     </main>
-  );
+  )
 }
