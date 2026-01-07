@@ -57,7 +57,7 @@ export async function GET(req: Request) {
           // Only include positive odds (+100 or higher)
           if (outcome.price >= 100) {
             props.push({
-              id: `${market.key}_${outcome.name}_${outcome.point || 'nopoint'}`,
+              id: `${market.key}_${outcome.description || outcome.name}_${outcome.name}_${outcome.point || 'nopoint'}`.replace(/\s+/g, '_'),
               marketKey: market.key,
               marketName: market.key.replace(/_/g, ' ').toUpperCase(),
               playerName: outcome.description || outcome.name,
