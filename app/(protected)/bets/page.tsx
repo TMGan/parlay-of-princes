@@ -1,7 +1,7 @@
 import { getCurrentUser } from '@/lib/auth/session';
 import { getUserBetsForWeek } from '@/lib/db/queries';
 import { getWeekNumber } from '@/lib/utils/format';
-import { PlaceBetForm } from '@/components/betting/PlaceBetForm';
+import { StructuredBetForm } from '@/components/betting/StructuredBetForm';
 import { UserBetsList } from '@/components/betting/UserBetsList';
 
 export default async function BetsPage() {
@@ -32,10 +32,10 @@ export default async function BetsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Place Bet Form */}
+        {/* Structured Bet Form */}
         <div className="card lg:col-span-1">
           <h2 className="text-xl font-bold mb-4">New Bet</h2>
-          <PlaceBetForm
+          <StructuredBetForm
             userId={user.id}
             currentWeek={currentWeek}
             canPlaceRegularBet={canPlaceRegularBet}
