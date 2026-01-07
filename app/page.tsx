@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 const highlights = [
   {
     title: "Build regal parlays",
@@ -41,13 +39,19 @@ export default function Home() {
             The arena for sharp bettors to build princely tickets, track their edge, and claim the
             crown. Precision odds, rich analytics, and a throne worth defending.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/login" className="btn-primary text-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/login"
+              className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-full hover:opacity-90 transition-opacity text-center"
+            >
               Enter the Arena
-            </Link>
-            <Link href="/leaderboard" className="btn-secondary text-center">
+            </a>
+            <a
+              href="/leaderboard"
+              className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-semibold rounded-full hover:opacity-90 transition-opacity text-center"
+            >
               View Leaderboard
-            </Link>
+            </a>
           </div>
         </header>
 
