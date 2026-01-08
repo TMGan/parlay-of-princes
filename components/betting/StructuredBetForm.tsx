@@ -146,8 +146,6 @@ export function StructuredBetForm({
           oddsAmerican: selectedProp.odds,
           gameStartTime: new Date(selectedGame.commenceTime).toISOString(),
           isKingLock,
-          userId,
-          weekNumber: currentWeek,
         }),
       });
 
@@ -204,19 +202,19 @@ export function StructuredBetForm({
       {/* Step 2: Select Game */}
       {step === 'game' && (
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Step 2: Select Game
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium">Step 2: Select Game</label>
             <button
               onClick={() => {
                 setStep('sport');
                 setSelectedSport('');
                 setGames([]);
               }}
-              className="ml-3 px-3 py-1 text-xs bg-primary/20 text-gray-900 font-medium rounded hover:bg-primary/30 transition-colors"
->
-  ← Change Sport
+              className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-lg hover:bg-secondary transition-colors"
+            >
+              ← Change Sport
             </button>
-          </label>
+          </div>
 
           {isLoadingGames ? (
             <div className="flex items-center justify-center py-8">
@@ -248,19 +246,19 @@ export function StructuredBetForm({
       {/* Step 3: Select Player Prop */}
       {step === 'prop' && (
         <div>
-          <label className="block text-sm font-medium mb-2">
-            Step 3: Select Player Prop
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium">Step 3: Select Player Prop</label>
             <button
               onClick={() => {
                 setStep('game');
                 setSelectedGame(null);
                 setProps([]);
               }}
-              className="ml-3 px-3 py-1 text-xs bg-primary/20 text-gray-900 font-medium rounded hover:bg-primary/30 transition-colors"
->
-  ← Change Game
+              className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-lg hover:bg-secondary transition-colors"
+            >
+              ← Change Game
             </button>
-          </label>
+          </div>
 
           {isLoadingProps ? (
             <div className="flex items-center justify-center py-8">
@@ -307,7 +305,7 @@ export function StructuredBetForm({
             className="w-4 h-4"
           />
           <label htmlFor="kingLockStructured" className="text-sm">
-            Make this my King Lock (2x points)
+            Make this my 👑 <span className="font-bold text-primary">King Lock</span> (2x points)
           </label>
         </div>
       )}
