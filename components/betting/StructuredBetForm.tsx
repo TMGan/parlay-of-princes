@@ -37,8 +37,8 @@ const SPORTS = [
 ];
 
 export function StructuredBetForm({
-  userId,
-  currentWeek,
+  userId: _userId,
+  currentWeek: _currentWeek,
   canPlaceRegularBet,
   canPlaceKingLock,
 }: StructuredBetFormProps) {
