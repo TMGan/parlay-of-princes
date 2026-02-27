@@ -14,7 +14,8 @@ if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     const now = Date.now();
     Object.keys(rateLimitStore).forEach((key) => {
-      if (rateLimitStore[key].resetTime < now) {
+      const entry = rateLimitStore[key];
+      if (entry && entry.resetTime < now) {
         delete rateLimitStore[key];
       }
     });

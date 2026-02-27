@@ -45,6 +45,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.username,
+          username: user.username,
           role: user.role,
         };
       },
@@ -55,7 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.email = user.email ?? null;
-        token.username = user.name;
+        token.username = (user as any).username ?? user.name ?? null;
         token.role = user.role;
         token.iat = Math.floor(Date.now() / 1000); // Issued at time
       }
