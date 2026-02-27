@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.email = user.email;
+        token.email = user.email ?? null;
         token.username = user.name;
         token.role = user.role;
         token.iat = Math.floor(Date.now() / 1000); // Issued at time
