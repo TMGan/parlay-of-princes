@@ -2,19 +2,37 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
 import { createBet, getUserBetsForWeek } from "@/lib/db/queries";
 import { getWeekNumber } from "@/lib/utils/format";
+import { rateLimit, createRateLimitResponse } from "@/lib/security/rate-limit";
+import { sanitizeString, validateOdds } from "@/lib/security/validation";
+import { handleError, handleValidationError } from "@/lib/security/error-handler";
 
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
 
+    // Rate limiting: 20 bets per 15 minutes per user
+    const rateLimitResult = rateLimit(`bet-place-${user.id}`, 20);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse("Too many bet attempts. Please wait 15 minutes.");
+    }
+
     const { sport, description, oddsAmerican, gameStartTime, isKingLock } = await req.json();
 
-    // Validate odds
-    if (oddsAmerican < 100) {
-      return NextResponse.json(
-        { error: "Odds must be +100 or higher (no negative odds allowed)" },
-        { status: 400 }
-      );
+    // Input validation
+    const sanitizedSport = sanitizeString(sport, 50);
+    const sanitizedDescription = sanitizeString(description, 500);
+    const odds = Number(oddsAmerican);
+
+    if (!sanitizedSport || !sanitizedDescription) {
+      return handleValidationError("Invalid input");
+    }
+
+    if (!validateOdds(odds)) {
+      return handleValidationError("Odds must be between +100 and +10000");
+    }
+
+    if (!gameStartTime || isNaN(new Date(gameStartTime).getTime())) {
+      return handleValidationError("Invalid game time");
     }
 
     const currentWeek = getWeekNumber(new Date());
@@ -41,22 +59,16 @@ export async function POST(req: Request) {
     const bet = await createBet({
       userId: user.id,
       weekNumber: currentWeek,
-      sport,
-      description,
-      oddsAmerican,
-      oddsLocked: oddsAmerican,
+      sport: sanitizedSport,
+      description: sanitizedDescription,
+      oddsAmerican: odds,
+      oddsLocked: odds,
       isKingLock,
       gameStartTime: new Date(gameStartTime)
     });
 
     return NextResponse.json({ success: true, bet });
   } catch (error: any) {
-    console.error("Place bet error:", error);
-
-    if (error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json({ error: "Failed to place bet" }, { status: 500 });
+    return handleError(error, "Place Bet");
   }
 }

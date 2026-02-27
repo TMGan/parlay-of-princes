@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
+import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
+import { handleError } from '@/lib/security/error-handler';
 
 const ODDS_API_KEY = process.env.ODDS_API_KEY;
 const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 
 export async function GET(req: Request) {
   try {
+    // Rate limiting: 60 requests per 15 minutes per IP
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+    const rateLimitResult = rateLimit(`odds-games-${ip}`, 60);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse('Too many requests. Please slow down.');
+    }
+
     if (!ODDS_API_KEY) {
       return NextResponse.json(
         { error: 'Odds API key not configured' },
@@ -39,10 +49,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json(games);
   } catch (error) {
-    console.error('Error fetching games:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch games' },
-      { status: 500 }
-    );
+    return handleError(error, 'Games');
   }
 }

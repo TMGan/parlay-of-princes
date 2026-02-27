@@ -8,13 +8,58 @@ import {
   getUserByEmail,
   getUserByUsername
 } from "@/lib/db/queries";
+import { rateLimit, createRateLimitResponse } from "@/lib/security/rate-limit";
+import {
+  sanitizeEmail,
+  sanitizeString,
+  validateEmail,
+  validateUsername,
+  validatePassword,
+  validateInviteCode as validateInviteCodeFormat
+} from "@/lib/security/validation";
+import { handleError, handleValidationError } from "@/lib/security/error-handler";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    // Rate limiting: 5 registration attempts per hour per IP
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(",")[0] : "unknown";
+    const rateLimitResult = rateLimit(`register-${ip}`, 5, 60 * 60 * 1000);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse("Too many registration attempts. Please try again in an hour.");
+    }
 
-    // Validate input
-    const validatedData = registerSchema.parse(body);
+    const body = await req.json();
+    const { email, username, password, inviteCode } = body;
+
+    // Input validation and sanitization
+    const sanitizedEmail = sanitizeEmail(typeof email === "string" ? email : "");
+    const sanitizedUsername = sanitizeString(typeof username === "string" ? username : "", 30);
+    const sanitizedCode = typeof inviteCode === "string" ? inviteCode.trim().toUpperCase() : "";
+
+    if (!validateEmail(sanitizedEmail)) {
+      return handleValidationError("Invalid email format");
+    }
+
+    if (!validateUsername(sanitizedUsername)) {
+      return handleValidationError("Username must be 3-30 characters, alphanumeric and underscores only");
+    }
+
+    if (!validatePassword(typeof password === "string" ? password : "")) {
+      return handleValidationError("Password must be at least 8 characters");
+    }
+
+    if (!validateInviteCodeFormat(sanitizedCode)) {
+      return handleValidationError("Invalid invite code format");
+    }
+
+    // Validate input with schema after sanitization
+    const validatedData = registerSchema.parse({
+      email: sanitizedEmail,
+      username: sanitizedUsername,
+      password,
+      inviteCode: sanitizedCode
+    });
 
     // Check if invite code is valid
     const isValidCode = await validateInviteCode(validatedData.inviteCode);
@@ -61,12 +106,10 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Registration error:", error);
-
     if (error.name === "ZodError") {
-      return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 });
+      return handleValidationError("Validation failed");
     }
 
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    return handleError(error, "Register");
   }
 }

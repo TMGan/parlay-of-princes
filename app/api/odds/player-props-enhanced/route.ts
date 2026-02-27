@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
+import { handleError } from '@/lib/security/error-handler';
 
 const ODDS_API_KEY = process.env.ODDS_API_KEY;
 const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
@@ -16,6 +18,14 @@ const SPORT_MARKETS: Record<string, string> = {
 
 export async function GET(req: Request) {
   try {
+    // Rate limiting: 60 requests per 15 minutes per IP
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+    const rateLimitResult = rateLimit(`odds-props-${ip}`, 60);
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse('Too many requests. Please slow down.');
+    }
+
     if (!ODDS_API_KEY) {
       return NextResponse.json(
         { error: 'Odds API key not configured' },
@@ -57,7 +67,7 @@ export async function GET(req: Request) {
           // Only include positive odds (+100 or higher)
           if (outcome.price >= 100) {
             props.push({
-              id: `${market.key}_${outcome.description || outcome.name}_${outcome.name}_${outcome.point || 'nopoint'}`.replace(/\s+/g, '_'),
+              id: `${market.key}_${outcome.name}_${outcome.point || 'nopoint'}`,
               marketKey: market.key,
               marketName: market.key.replace(/_/g, ' ').toUpperCase(),
               playerName: outcome.description || outcome.name,
@@ -76,10 +86,6 @@ export async function GET(req: Request) {
 
     return NextResponse.json(props);
   } catch (error) {
-    console.error('Error fetching player props:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch player props' },
-      { status: 500 }
-    );
+    return handleError(error, 'Player Props');
   }
 }

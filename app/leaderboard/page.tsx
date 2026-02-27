@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getLeaderboard } from "@/lib/db/queries"
 import { formatPoints } from "@/lib/utils/format"
 
