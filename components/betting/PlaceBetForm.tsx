@@ -69,8 +69,9 @@ export function PlaceBetForm({
       });
 
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to place bet");
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }

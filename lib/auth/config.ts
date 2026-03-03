@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { getUserByEmail } from '@/lib/db/queries';
+import { User as PrismaUser } from '@prisma/client';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
@@ -26,38 +27,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const user = await getUserByEmail(credentials.email as string);
+        try {
+          const user = await getUserByEmail(credentials.email as string);
 
-        if (!user || !user.password) {
+          if (!user || !user.password) {
+            return null;
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.username,
+            username: user.username,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
           return null;
         }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.username,
-          username: user.username,
-          role: user.role,
-        };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email ?? null;
-        token.username = (user as any).username ?? user.name ?? null;
-        token.role = user.role;
+        const prismaUser = user as PrismaUser;
+        token.id = prismaUser.id;
+        token.email = prismaUser.email ?? null;
+        token.username = prismaUser.username ?? null;
+        token.role = prismaUser.role;
         token.iat = Math.floor(Date.now() / 1000); // Issued at time
       }
       return token;

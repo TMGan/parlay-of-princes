@@ -2,6 +2,7 @@ import { getCurrentUser } from '@/lib/auth/session';
 import { getUserBetsForWeek } from '@/lib/db/queries';
 import { getWeekNumber } from '@/lib/utils/format';
 import { StructuredBetForm } from '@/components/betting/StructuredBetForm';
+import { ManualBetForm } from '@/components/betting/ManualBetForm';
 import { UserBetsList } from '@/components/betting/UserBetsList';
 
 export default async function BetsPage() {
@@ -32,15 +33,39 @@ export default async function BetsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Structured Bet Form */}
-        <div className="card lg:col-span-1">
-          <h2 className="text-xl font-bold mb-4">New Bet</h2>
-          <StructuredBetForm
-            userId={user.id}
-            currentWeek={currentWeek}
-            canPlaceRegularBet={canPlaceRegularBet}
-            canPlaceKingLock={canPlaceKingLock}
-          />
+        {/* Bet Entry Forms */}
+        <div className="card lg:col-span-1 space-y-6">
+          <div>
+            <h2 className="text-xl font-bold mb-4">New Bet</h2>
+            
+            {/* Structured Bet Flow */}
+            <StructuredBetForm
+              userId={user.id}
+              currentWeek={currentWeek}
+              canPlaceRegularBet={canPlaceRegularBet}
+              canPlaceKingLock={canPlaceKingLock}
+            />
+          </div>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-800"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-background-light text-gray-400">OR</span>
+            </div>
+          </div>
+
+          {/* Manual Bet Entry */}
+          <div>
+            <ManualBetForm
+              userId={user.id}
+              currentWeek={currentWeek}
+              canPlaceRegularBet={canPlaceRegularBet}
+              canPlaceKingLock={canPlaceKingLock}
+            />
+          </div>
         </div>
 
         {/* Current Week Bets */}

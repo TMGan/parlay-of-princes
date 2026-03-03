@@ -105,8 +105,8 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    if (error.name === "ZodError") {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === "ZodError") {
       return handleValidationError("Validation failed");
     }
 

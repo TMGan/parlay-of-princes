@@ -16,6 +16,39 @@ const SPORT_MARKETS: Record<string, string> = {
   icehockey_nhl: 'player_points,player_shots_on_goal,player_assists,player_goals',
 };
 
+interface Outcome {
+  name: string;
+  description?: string;
+  price: number;
+  point?: number;
+}
+
+interface Market {
+  key: string;
+  outcomes?: Outcome[];
+}
+
+interface Bookmaker {
+  title: string;
+  markets?: Market[];
+}
+
+interface OddsData {
+  bookmakers?: Bookmaker[];
+}
+
+interface PlayerProp {
+  id: string;
+  marketKey: string;
+  marketName: string;
+  playerName: string;
+  propType: string;
+  line: number | null;
+  odds: number;
+  description: string;
+  bookmaker: string;
+}
+
 export async function GET(req: Request) {
   try {
     // Rate limiting: 60 requests per 15 minutes per IP
@@ -54,20 +87,20 @@ export async function GET(req: Request) {
       throw new Error('Failed to fetch player props');
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as OddsData;
 
     // Transform data to flat list of props with only positive odds
-    const props: any[] = [];
+    const props: PlayerProp[] = [];
 
-    if (data.bookmakers && data.bookmakers.length > 0) {
-      const bookmaker = data.bookmakers[0]; // Use first bookmaker (usually DraftKings/FanDuel)
+    const bookmaker = data.bookmakers?.[0]; // Use first bookmaker (usually DraftKings/FanDuel)
 
-      bookmaker.markets?.forEach((market: any) => {
-        market.outcomes?.forEach((outcome: any) => {
+    if (bookmaker?.markets) {
+      bookmaker.markets.forEach((market: Market) => {
+        market.outcomes?.forEach((outcome: Outcome) => {
           // Only include positive odds (+100 or higher)
           if (outcome.price >= 100) {
             props.push({
-              id: `${market.key}_${outcome.name}_${outcome.point || 'nopoint'}`,
+              id: `${market.key}_${outcome.description || outcome.name}_${outcome.name}_${outcome.point || 'nopoint'}`.replace(/\s+/g, '_'),
               marketKey: market.key,
               marketName: market.key.replace(/_/g, ' ').toUpperCase(),
               playerName: outcome.description || outcome.name,

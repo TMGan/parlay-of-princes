@@ -5,6 +5,21 @@ import { handleError } from '@/lib/security/error-handler';
 const ODDS_API_KEY = process.env.ODDS_API_KEY;
 const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 
+interface ApiEvent {
+  id: string;
+  home_team: string;
+  away_team: string;
+  commence_time: string;
+}
+
+interface SimplifiedGame {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  commenceTime: string;
+  sport: string;
+}
+
 export async function GET(req: Request) {
   try {
     // Rate limiting: 60 requests per 15 minutes per IP
@@ -36,10 +51,10 @@ export async function GET(req: Request) {
       throw new Error('Failed to fetch games');
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as ApiEvent[];
 
     // Simplify the response to just game info
-    const games = data.map((event: any) => ({
+    const games: SimplifiedGame[] = data.map((event: ApiEvent) => ({
       id: event.id,
       homeTeam: event.home_team,
       awayTeam: event.away_team,

@@ -37,8 +37,9 @@ export function InviteCodeForm() {
 
       setCode("");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to create invite code");
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }

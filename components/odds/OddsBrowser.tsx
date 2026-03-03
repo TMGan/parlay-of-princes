@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { EventCard } from "./EventCard"
+import type { SportsEvent } from "./EventCard"
 
 interface OddsBrowserProps {
   userId: string
@@ -11,7 +11,7 @@ interface OddsBrowserProps {
 
 export function OddsBrowser({ userId }: OddsBrowserProps) {
   const [selectedSport, setSelectedSport] = useState("americanfootball_nfl")
-  const [events, setEvents] = useState<any[]>([])
+  const [events, setEvents] = useState<SportsEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -24,6 +24,7 @@ export function OddsBrowser({ userId }: OddsBrowserProps) {
 
   useEffect(() => {
     fetchEvents()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSport])
 
   const fetchEvents = async () => {
@@ -37,10 +38,11 @@ export function OddsBrowser({ userId }: OddsBrowserProps) {
         throw new Error("Failed to fetch events")
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as SportsEvent[]
       setEvents(data)
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to fetch events")
+      setError(error.message)
     } finally {
       setIsLoading(false)
     }

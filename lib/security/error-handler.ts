@@ -1,23 +1,44 @@
 import { NextResponse } from 'next/server';
 
-export function handleError(error: any, context: string) {
-  // Log error server-side (safe - not exposed to client)
-  console.error(`[${context}] Error:`, error);
+interface ErrorWithMessage {
+  message: string;
+}
 
-  // Never expose internal error details to client in production
+function isErrorWithMessage(error: unknown): error is ErrorWithMessage {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
+  );
+}
+
+function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
+  if (isErrorWithMessage(maybeError)) return maybeError;
+
+  try {
+    return new Error(JSON.stringify(maybeError));
+  } catch {
+    return new Error(String(maybeError));
+  }
+}
+
+export function handleError(error: unknown, context: string) {
+  const errorWithMessage = toErrorWithMessage(error);
+  console.error(`[${context}] Error:`, errorWithMessage);
+
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   if (isDevelopment) {
     return NextResponse.json(
       {
-        error: error.message || 'An error occurred',
+        error: errorWithMessage.message || 'An error occurred',
         context,
       },
       { status: 500 }
     );
   }
 
-  // Production: Generic error message (no sensitive info leaked)
   return NextResponse.json(
     { error: 'An unexpected error occurred. Please try again.' },
     { status: 500 }

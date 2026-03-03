@@ -15,10 +15,11 @@ export async function POST(req: Request) {
     const inviteCode = await createInviteCode(code.toUpperCase());
 
     return NextResponse.json({ success: true, inviteCode });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Create invite code error:", error);
 
-    if (error.message === "Forbidden - Admin access required") {
+    if (message === "Forbidden - Admin access required") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

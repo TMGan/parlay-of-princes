@@ -41,6 +41,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
+      console.error(err);
       setError("Something went wrong. Please try again.");
       setIsLoading(false);
     }
@@ -102,7 +103,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-center text-sm text-gray-400">
-            Don't have an account?{" "}
+            {"Don't have an account?"}{" "}
             <Link href="/register" className="text-secondary hover:text-secondary-light">
               Register here
             </Link>

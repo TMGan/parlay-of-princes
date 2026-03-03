@@ -14,7 +14,7 @@ interface PlaceBetFromOddsProps {
   onClose: () => void
 }
 
-export function PlaceBetFromOdds({ userId: _userId, sport, description, odds, gameStartTime, onClose }: PlaceBetFromOddsProps) {
+export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onClose }: PlaceBetFromOddsProps) {
   const router = useRouter()
   const [isKingLock, setIsKingLock] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -46,8 +46,9 @@ export function PlaceBetFromOdds({ userId: _userId, sport, description, odds, ga
       onClose()
       router.refresh()
       router.push("/bets")
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to place bet")
+      setError(error.message)
     } finally {
       setIsLoading(false)
     }

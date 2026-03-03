@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import Link from "next/link";
 import { getLeaderboard } from "@/lib/db/queries"
 import { formatPoints } from "@/lib/utils/format"
 
@@ -10,12 +11,12 @@ export default async function PublicLeaderboardPage() {
       <nav className="bg-background-light border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <a href="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Parlay of Princes
-            </a>
-            <a href="/login" className="text-gray-300 hover:text-white transition-colors">
+            </Link>
+            <Link href="/login" className="text-gray-300 hover:text-white transition-colors">
               Sign In
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
@@ -26,7 +27,7 @@ export default async function PublicLeaderboardPage() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Leaderboard
             </h1>
-            <p className="text-gray-400 mt-2">See who's ruling the arena</p>
+            <p className="text-gray-400 mt-2">{"See who’s ruling the arena"}</p>
           </div>
 
           <div className="card overflow-hidden">
@@ -83,12 +84,12 @@ export default async function PublicLeaderboardPage() {
           <div className="card text-center py-12">
             <h2 className="text-3xl font-bold mb-4">Ready to Compete?</h2>
             <p className="text-gray-400 mb-6 max-w-md mx-auto">Join the arena and start building your own royal parlay empire</p>
-            <a
+            <Link
               href="/login"
               className="inline-block px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-full hover:opacity-90 transition-opacity"
             >
               Enter the Arena
-            </a>
+            </Link>
           </div>
         </div>
       </main>

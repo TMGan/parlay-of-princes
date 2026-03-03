@@ -34,10 +34,11 @@ export async function DELETE(
     await deleteBet(betId);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Delete bet error:', error);
 
-    if (error.message === 'Unauthorized') {
+    if (message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

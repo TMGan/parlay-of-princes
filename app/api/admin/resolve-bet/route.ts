@@ -23,10 +23,11 @@ export async function POST(req: Request) {
     await updateUserStats(bet.userId);
 
     return NextResponse.json({ success: true, bet });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Resolve bet error:", error);
 
-    if (error.message === "Forbidden - Admin access required") {
+    if (message === "Forbidden - Admin access required") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

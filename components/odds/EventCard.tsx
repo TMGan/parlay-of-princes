@@ -5,8 +5,33 @@ import { formatOdds } from '@/lib/utils/format';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { PlaceBetFromOdds } from './PlaceBetFromOdds';
 
+interface Outcome {
+  name: string;
+  price: number;
+  point?: number;
+  description?: string;
+}
+
+interface Market {
+  key: string;
+  outcomes?: Outcome[];
+}
+
+interface Bookmaker {
+  title: string;
+  markets?: Market[];
+}
+
+export interface SportsEvent {
+  id: string;
+  commence_time: string;
+  home_team: string;
+  away_team: string;
+  bookmakers?: Bookmaker[];
+}
+
 interface EventCardProps {
-  event: any;
+  event: SportsEvent;
   sport: string;
   userId: string;
 }
@@ -23,7 +48,7 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
   const [showPlayerProps, setShowPlayerProps] = useState(false);
   const [playerProps, setPlayerProps] = useState<PlayerProp[]>([]);
   const [isLoadingProps, setIsLoadingProps] = useState(false);
-  const [selectedProp, setSelectedProp] = useState<any>(null);
+  const [selectedProp, setSelectedProp] = useState<{ description: string; odds: number; gameStartTime: Date } | null>(null);
 
   const startTime = new Date(event.commence_time);
   const homeTeam = event.home_team;
@@ -34,20 +59,20 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
   const markets = bookmaker?.markets || [];
 
   // Extract spreads and totals - ONLY POSITIVE ODDS
-  const spreadMarket = markets.find((m: any) => m.key === 'spreads');
-  const totalsMarket = markets.find((m: any) => m.key === 'totals');
+  const spreadMarket = markets.find((m: Market) => m.key === 'spreads');
+  const totalsMarket = markets.find((m: Market) => m.key === 'totals');
 
   const homeSpread = spreadMarket?.outcomes?.find(
-    (o: any) => o.name === homeTeam && o.price >= 100
+    (o: Outcome) => o.name === homeTeam && o.price >= 100
   );
   const awaySpread = spreadMarket?.outcomes?.find(
-    (o: any) => o.name === awayTeam && o.price >= 100
+    (o: Outcome) => o.name === awayTeam && o.price >= 100
   );
   const overTotal = totalsMarket?.outcomes?.find(
-    (o: any) => o.name === 'Over' && o.price >= 100
+    (o: Outcome) => o.name === 'Over' && o.price >= 100
   );
   const underTotal = totalsMarket?.outcomes?.find(
-    (o: any) => o.name === 'Under' && o.price >= 100
+    (o: Outcome) => o.name === 'Under' && o.price >= 100
   );
 
   // Count how many positive odds we have
@@ -71,7 +96,7 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
         throw new Error('Failed to fetch player props');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as PlayerProp[];
       setPlayerProps(data);
     } catch (error) {
       console.error('Error fetching player props:', error);
@@ -131,8 +156,8 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
             <div className="bg-background p-3 rounded">
               <p className="text-xs text-gray-400 mb-1">Home Spread</p>
               <p className="font-semibold">
-                {homeTeam} {homeSpread.point > 0 ? '+' : ''}
-                {homeSpread.point}
+                {homeTeam} {(homeSpread.point ?? 0) > 0 ? '+' : ''}
+                {homeSpread.point ?? 0}
               </p>
               <p className="text-sm text-primary">{formatOdds(homeSpread.price)}</p>
             </div>
@@ -166,15 +191,15 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
                   <button
                     onClick={() =>
                       handleSelectProp(
-                        `${homeTeam} ${homeSpread.point > 0 ? '+' : ''}${homeSpread.point}`,
+                        `${homeTeam} ${(homeSpread.point ?? 0) > 0 ? '+' : ''}${homeSpread.point ?? 0}`,
                         homeSpread.price
                       )
                     }
                     className="bg-background p-4 rounded hover:border-primary border border-gray-800 transition-colors text-left"
                   >
                     <p className="font-semibold mb-1">
-                      {homeTeam} {homeSpread.point > 0 ? '+' : ''}
-                      {homeSpread.point}
+                      {homeTeam} {(homeSpread.point ?? 0) > 0 ? '+' : ''}
+                      {homeSpread.point ?? 0}
                     </p>
                     <p className="text-lg text-primary font-bold">{formatOdds(homeSpread.price)}</p>
                   </button>
@@ -183,15 +208,15 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
                   <button
                     onClick={() =>
                       handleSelectProp(
-                        `${awayTeam} ${awaySpread.point > 0 ? '+' : ''}${awaySpread.point}`,
+                        `${awayTeam} ${(awaySpread.point ?? 0) > 0 ? '+' : ''}${awaySpread.point ?? 0}`,
                         awaySpread.price
                       )
                     }
                     className="bg-background p-4 rounded hover:border-primary border border-gray-800 transition-colors text-left"
                   >
                     <p className="font-semibold mb-1">
-                      {awayTeam} {awaySpread.point > 0 ? '+' : ''}
-                      {awaySpread.point}
+                      {awayTeam} {(awaySpread.point ?? 0) > 0 ? '+' : ''}
+                      {awaySpread.point ?? 0}
                     </p>
                     <p className="text-lg text-primary font-bold">{formatOdds(awaySpread.price)}</p>
                   </button>
@@ -210,7 +235,7 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
                     onClick={() => handleSelectProp(`Over ${overTotal.point}`, overTotal.price)}
                     className="bg-background p-4 rounded hover:border-primary border border-gray-800 transition-colors text-left"
                   >
-                    <p className="font-semibold mb-1">Over {overTotal.point}</p>
+                    <p className="font-semibold mb-1">Over {overTotal.point ?? 0}</p>
                     <p className="text-lg text-primary font-bold">{formatOdds(overTotal.price)}</p>
                   </button>
                 )}
@@ -219,7 +244,7 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
                     onClick={() => handleSelectProp(`Under ${underTotal.point}`, underTotal.price)}
                     className="bg-background p-4 rounded hover:border-primary border border-gray-800 transition-colors text-left"
                   >
-                    <p className="font-semibold mb-1">Under {underTotal.point}</p>
+                    <p className="font-semibold mb-1">Under {underTotal.point ?? 0}</p>
                     <p className="text-lg text-primary font-bold">{formatOdds(underTotal.price)}</p>
                   </button>
                 )}

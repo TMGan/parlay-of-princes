@@ -36,12 +36,8 @@ const SPORTS = [
   { key: 'icehockey_nhl', label: 'NHL' },
 ];
 
-export function StructuredBetForm({
-  userId: _userId,
-  currentWeek: _currentWeek,
-  canPlaceRegularBet,
-  canPlaceKingLock,
-}: StructuredBetFormProps) {
+export function StructuredBetForm(props: StructuredBetFormProps) {
+  const { canPlaceRegularBet, canPlaceKingLock } = props;
   const router = useRouter();
 
   // Step tracking
@@ -55,7 +51,7 @@ export function StructuredBetForm({
 
   // Data
   const [games, setGames] = useState<Game[]>([]);
-  const [props, setProps] = useState<PlayerProp[]>([]);
+  const [playerProps, setPlayerProps] = useState<PlayerProp[]>([]);
 
   // Loading states
   const [isLoadingGames, setIsLoadingGames] = useState(false);
@@ -70,6 +66,7 @@ export function StructuredBetForm({
     if (selectedSport) {
       fetchGames();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSport]);
 
   // Fetch props when game is selected
@@ -77,6 +74,7 @@ export function StructuredBetForm({
     if (selectedGame) {
       fetchProps();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGame]);
 
   const fetchGames = async () => {
@@ -93,8 +91,9 @@ export function StructuredBetForm({
       const data = await response.json();
       setGames(data);
       setStep('game');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to fetch games');
+      setError(error.message);
     } finally {
       setIsLoadingGames(false);
     }
@@ -119,10 +118,11 @@ export function StructuredBetForm({
         setError('No player props available for this game yet');
       }
 
-      setProps(data);
+      setPlayerProps(data);
       setStep('prop');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to fetch player props');
+      setError(error.message);
     } finally {
       setIsLoadingProps(false);
     }
@@ -161,11 +161,12 @@ export function StructuredBetForm({
       setIsKingLock(false);
       setStep('sport');
       setGames([]);
-      setProps([]);
+      setPlayerProps([]);
 
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to place bet');
+      setError(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -252,7 +253,7 @@ export function StructuredBetForm({
               onClick={() => {
                 setStep('game');
                 setSelectedGame(null);
-                setProps([]);
+                setPlayerProps([]);
               }}
               className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-lg hover:bg-secondary transition-colors"
             >
@@ -264,13 +265,13 @@ export function StructuredBetForm({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="animate-spin text-primary" size={32} />
             </div>
-          ) : props.length === 0 ? (
+          ) : playerProps.length === 0 ? (
             <p className="text-sm text-gray-400 py-4">
               {error || 'No props available for this game'}
             </p>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {props.map((prop) => (
+              {playerProps.map((prop) => (
                 <button
                   key={prop.id}
                   onClick={() => setSelectedProp(prop)}
