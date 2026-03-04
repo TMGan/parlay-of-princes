@@ -16,81 +16,100 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { userId, weekNumber, sport, description, oddsAmerican, gameStartTime, isKingLock } = body;
+const { 
+  userId, 
+  weekNumber, 
+  sport, 
+  description, 
+  oddsAmerican, 
+  gameStartTime, 
+  isKingLock 
+} = body;
 
-    if (!userId || !weekNumber || !sport || !description || !oddsAmerican || !gameStartTime) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
-    }
+// Validate required fields
+if (!userId || !weekNumber || !sport || !description || !oddsAmerican || !gameStartTime) {
+  return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
+}
 
-    const currentWeek = getWeekNumber(new Date());
-    const minWeek = Math.max(1, currentWeek - 26);
-    const maxWeek = currentWeek - 1;
-    const parsedWeek = Number(weekNumber);
+// Ensure proper types
+const userIdString = String(userId);
+const isKingLockBoolean = Boolean(isKingLock);
+const parsedWeek = Number(weekNumber);
+const oddsValue = Number(oddsAmerican);
 
-    if (Number.isNaN(parsedWeek) || parsedWeek < minWeek || parsedWeek > maxWeek) {
-      return NextResponse.json(
-        { error: `Week must be between ${minWeek} and ${maxWeek}` },
-        { status: 400 }
-      );
-    }
+// Validate week number
+const currentWeek = getWeekNumber(new Date());
+const minWeek = Math.max(1, currentWeek - 26);
+const maxWeek = currentWeek - 1;
 
-    const sanitizedSport = sanitizeString(sport, 50);
-    const sanitizedDescription = sanitizeString(description, 500);
-    const oddsValue = Number(oddsAmerican);
+if (isNaN(parsedWeek) || parsedWeek < minWeek || parsedWeek > maxWeek) {
+  return NextResponse.json(
+    { error: `Week must be between ${minWeek} and ${maxWeek}` },
+    { status: 400 }
+  );
+}
 
-    if (!validateOdds(oddsValue)) {
-      return NextResponse.json(
-        { error: 'Odds must be between +100 and +10000' },
-        { status: 400 }
-      );
-    }
+// Sanitize and validate
+const sanitizedSport = sanitizeString(sport, 50);
+const sanitizedDescription = sanitizeString(description, 500);
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+if (!validateOdds(oddsValue)) {
+  return NextResponse.json(
+    { error: 'Odds must be between +100 and +10000' },
+    { status: 400 }
+  );
+}
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+// Verify user exists
+const user = await prisma.user.findUnique({
+  where: { id: userIdString },
+});
 
-    const existingBets = await prisma.bet.findMany({
-      where: {
-        userId,
-        weekNumber: parsedWeek,
-      },
-    });
+if (!user) {
+  return NextResponse.json({ error: 'User not found' }, { status: 404 });
+}
 
-    const regularBets = existingBets.filter((bet) => !bet.isKingLock);
-    const hasKingLock = existingBets.some((bet) => bet.isKingLock);
+// Check if user already has 3 regular bets or 1 King Lock for this week
+const existingBets = await prisma.bet.findMany({
+  where: {
+    userId: userIdString,
+    weekNumber: parsedWeek,
+  },
+});
 
-    if (isKingLock && hasKingLock) {
-      return NextResponse.json(
-        { error: `User already has a King Lock for week ${parsedWeek}` },
-        { status: 400 }
-      );
-    }
+const regularBets = existingBets.filter((bet) => !bet.isKingLock);
+const hasKingLock = existingBets.some((bet) => bet.isKingLock);
 
-    if (!isKingLock && regularBets.length >= 3) {
-      return NextResponse.json(
-        { error: `User already has 3 regular bets for week ${parsedWeek}` },
-        { status: 400 }
-      );
-    }
+if (isKingLockBoolean && hasKingLock) {
+  return NextResponse.json(
+    { error: `User already has a King Lock for week ${parsedWeek}` },
+    { status: 400 }
+  );
+}
 
-    const bet = await prisma.bet.create({
-      data: {
-        userId,
-        weekNumber: parsedWeek,
-        sport: sanitizedSport,
-        description: sanitizedDescription,
-        oddsAmerican: oddsValue,
-        gameStartTime: new Date(gameStartTime),
-        isKingLock,
-        status: 'PENDING',
-      },
-    });
+if (!isKingLockBoolean && regularBets.length >= 3) {
+  return NextResponse.json(
+    { error: `User already has 3 regular bets for week ${parsedWeek}` },
+    { status: 400 }
+  );
+}
 
-    return NextResponse.json(bet, { status: 201 });
+// Create the historical bet (status: PENDING)
+const bet = await prisma.bet.create({
+  data: {
+    userId: userIdString,
+    weekNumber: parsedWeek,
+    sport: sanitizedSport,
+    description: sanitizedDescription,
+    oddsAmerican: oddsValue,
+    oddsLocked: oddsValue,  // ← ADD THIS LINE
+    gameStartTime: new Date(gameStartTime),
+    isKingLock: isKingLockBoolean,
+    status: 'PENDING',
+  },
+});
+
+return NextResponse.json(bet, { status: 201 });
   } catch (error) {
     return handleError(error, 'Historical Bet Creation');
   }
