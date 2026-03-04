@@ -171,3 +171,20 @@ export async function markInviteCodeAsUsed(code: string, userId: string) {
     }
   });
 }
+
+// Get all users for dropdown
+export async function getAllUsersForAdmin() {
+  return await prisma.user.findMany({
+    where: {
+      role: "USER" // Only show regular users, not admins
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true
+    },
+    orderBy: {
+      username: "asc"
+    }
+  });
+}

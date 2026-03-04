@@ -38,7 +38,7 @@ export default async function AdminPage() {
       title: "Resolve Bets",
       description: "Mark bets as won, lost, or voided",
       icon: Trophy,
-      href: "/admin/resolve",
+      href: "/admin/bets",
       stat: `${pendingBets} pending`,
       color: "text-accent",
       bgColor: "bg-accent/10"
