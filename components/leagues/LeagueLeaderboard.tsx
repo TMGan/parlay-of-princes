@@ -14,6 +14,30 @@ const RANK_STYLES: Record<number, string> = {
   3: 'bg-amber-700/20 text-amber-700',
 };
 
+function getPositionHint(
+  leaderboard: LeaderboardEntry[],
+  index: number
+): { text: string; className: string } | null {
+  const current = leaderboard[index];
+  if (!current) return null;
+
+  if (leaderboard.length <= 1) {
+    return index === 0 ? { text: 'Uncontested! 👑', className: 'text-green-500' } : null;
+  }
+
+  if (index === 0) {
+    const second = leaderboard[1];
+    if (!second) return null;
+    const diff = current.totalPoints - second.totalPoints;
+    return { text: `Leading by +${diff} pts`, className: 'text-green-500' };
+  }
+
+  const above = leaderboard[index - 1];
+  if (!above) return null;
+  const diff = above.totalPoints - current.totalPoints;
+  return { text: `Need +${diff} pts to pass ${above.username}`, className: 'text-yellow-500' };
+}
+
 export function LeagueLeaderboard({ leaderboard, currentUserId }: LeagueLeaderboardProps) {
   return (
     <div className="space-y-4">
@@ -44,6 +68,7 @@ export function LeagueLeaderboard({ leaderboard, currentUserId }: LeagueLeaderbo
                   const isCurrentUser = entry.userId === currentUserId;
                   const rank = index + 1;
                   const rankStyle = RANK_STYLES[rank] ?? 'bg-background text-gray-500';
+                  const hint = isCurrentUser ? getPositionHint(leaderboard, index) : null;
 
                   return (
                     <tr
@@ -82,6 +107,9 @@ export function LeagueLeaderboard({ leaderboard, currentUserId }: LeagueLeaderbo
                         <span className="text-xl font-bold text-primary">
                           {formatPoints(entry.totalPoints)}
                         </span>
+                        {hint && (
+                          <p className={`text-xs mt-1 ${hint.className}`}>{hint.text}</p>
+                        )}
                       </td>
 
                       <td className="px-6 py-4 text-center text-sm">
