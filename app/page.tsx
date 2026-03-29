@@ -46,12 +46,6 @@ export default function Home() {
             >
               Enter the Arena
             </a>
-            <a
-              href="/leaderboard"
-              className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-semibold rounded-full hover:opacity-90 transition-opacity text-center"
-            >
-              View Leaderboard
-            </a>
           </div>
         </header>
 

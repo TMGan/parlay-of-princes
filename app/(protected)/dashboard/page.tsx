@@ -149,10 +149,6 @@ export default async function DashboardPage() {
           <h3 className="text-lg font-semibold mb-2">Place Bets</h3>
           <p className="text-gray-400 text-sm">Browse available bets and make your picks for this week</p>
         </Link>
-        <Link href="/leaderboard" className="card hover:border-secondary transition-colors cursor-pointer">
-          <h3 className="text-lg font-semibold mb-2">View Leaderboard</h3>
-          <p className="text-gray-400 text-sm">See how you rank against other princes</p>
-        </Link>
         <Link href="/profile" className="card hover:border-accent transition-colors cursor-pointer">
           <h3 className="text-lg font-semibold mb-2">Your Stats</h3>
           <p className="text-gray-400 text-sm">View detailed betting history and performance</p>
