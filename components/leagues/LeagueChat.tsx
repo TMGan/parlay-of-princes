@@ -216,8 +216,8 @@ export function LeagueChat({ leagueId, currentUserId, isLeagueAdmin }: LeagueCha
                   onClick={() => setShowEmojiPicker(false)}
                   aria-hidden="true"
                 />
-                <div className="absolute bottom-full left-0 mb-2 p-2 bg-background-light border border-gray-800 rounded-lg shadow-xl z-50">
-                  <div className="grid grid-cols-5 gap-1">
+                <div className="absolute bottom-full left-0 mb-2 p-3 bg-background-light border border-gray-800 rounded-lg shadow-xl z-50 min-w-[240px]">
+                  <div className="grid grid-cols-5 gap-2">
                     {EMOJI_OPTIONS.map((emoji) => (
                       <button
                         key={emoji}
@@ -228,7 +228,7 @@ export function LeagueChat({ leagueId, currentUserId, isLeagueAdmin }: LeagueCha
                           }
                           setShowEmojiPicker(false);
                         }}
-                        className="text-2xl hover:bg-background p-1.5 rounded transition-colors"
+                        className="text-2xl hover:bg-background p-2 rounded transition-colors w-10 h-10 flex items-center justify-center"
                         aria-label={`Insert ${emoji}`}
                       >
                         {emoji}
