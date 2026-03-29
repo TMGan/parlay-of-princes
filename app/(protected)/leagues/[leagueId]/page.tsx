@@ -9,6 +9,7 @@ import {
 import { LeagueOverview } from '@/components/leagues/LeagueOverview';
 import { LeagueLeaderboard } from '@/components/leagues/LeagueLeaderboard';
 import { LeagueChat } from '@/components/leagues/LeagueChat';
+import { LeagueAdminPanel } from '@/components/leagues/LeagueAdminPanel';
 import { ChatErrorBoundary } from '@/components/error-boundary/ChatErrorBoundary';
 
 export default async function LeaguePage({
@@ -36,6 +37,7 @@ export default async function LeaguePage({
 
   return (
     <div className="space-y-8">
+      {userIsAdmin && <LeagueAdminPanel leagueId={leagueId} />}
       <LeagueOverview league={league} currentUserId={user.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
