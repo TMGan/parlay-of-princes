@@ -56,20 +56,19 @@ async function main() {
     console.log(`✅ Invite code created: ${code}`);
   }
 
-  // Create current league
+  // Create default league
   const currentYear = new Date().getFullYear();
-  await prisma.league.upsert({
-    where: { id: "current-season" },
+  const defaultLeague = await prisma.league.upsert({
+    where: { joinCode: "MAIN2024" },
     update: {},
     create: {
-      id: "current-season",
       name: `${currentYear} Season`,
-      seasonYear: currentYear,
-      startDate: new Date(`${currentYear}-01-01`),
-      endDate: new Date(`${currentYear}-12-31`)
+      creatorId: admin.id,
+      joinCode: "MAIN2024",
+      isPublic: true
     }
   });
-  console.log(`✅ League created: ${currentYear} Season`);
+  console.log(`✅ League created: ${defaultLeague.name}`);
 
   console.log("🎉 Seeding complete!");
 }

@@ -1,5 +1,6 @@
+import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/session';
-import { getUserBetsForWeek } from '@/lib/db/queries';
+import { getUserBetsForWeek, getUserLeagues } from '@/lib/db/queries';
 import { getWeekNumber } from '@/lib/utils/format';
 import { StructuredBetForm } from '@/components/betting/StructuredBetForm';
 import { ManualBetForm } from '@/components/betting/ManualBetForm';
@@ -10,6 +11,11 @@ export default async function BetsPage() {
 
   if (!user) {
     return null;
+  }
+
+  const userLeagues = await getUserLeagues(user.id);
+  if (userLeagues.length === 0) {
+    redirect('/leagues/onboarding');
   }
 
   const currentWeek = getWeekNumber(new Date());

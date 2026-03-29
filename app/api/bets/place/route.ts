@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/session";
-import { createBet, getUserBetsForWeek } from "@/lib/db/queries";
+import { createBet, getUserBetsForWeek, getUserLeagues } from "@/lib/db/queries";
 import { getWeekNumber } from "@/lib/utils/format";
 import { rateLimit, createRateLimitResponse } from "@/lib/security/rate-limit";
 import { sanitizeString, validateOdds } from "@/lib/security/validation";
@@ -9,6 +9,15 @@ import { handleError, handleValidationError } from "@/lib/security/error-handler
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
+
+    // Verify user is in at least one league
+    const userLeagues = await getUserLeagues(user.id);
+    if (userLeagues.length === 0) {
+      return NextResponse.json(
+        { error: 'You must join a league before placing bets' },
+        { status: 403 }
+      );
+    }
 
     // Rate limiting: 20 bets per 15 minutes per user
     const rateLimitResult = rateLimit(`bet-place-${user.id}`, 20);

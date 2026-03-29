@@ -1,10 +1,15 @@
 import { requireAdmin } from "@/lib/auth/session";
+import { isSuperAdmin } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db/client";
 import Link from "next/link";
-import { Users, Key, Trophy, Settings } from "lucide-react";
+import { Users, Key, Trophy, Settings, Shield } from "lucide-react";
 
 export default async function AdminPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
+
+  const leagueCount = isSuperAdmin(admin.email)
+    ? await prisma.league.count()
+    : null;
 
   const stats = await Promise.all([
     prisma.user.count(),
@@ -64,6 +69,21 @@ export default async function AdminPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {isSuperAdmin(admin.email) && (
+          <Link
+            href="/admin/leagues"
+            className="card hover:border-primary transition-colors cursor-pointer"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Shield className="text-primary" size={24} />
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">All Leagues</h3>
+            <p className="text-gray-400 text-sm mb-3">View and manage all leagues on the site</p>
+            <p className="text-sm font-medium text-gray-300">{leagueCount} leagues</p>
+          </Link>
+        )}
         {adminCards.map((card) => (
           <Link
             key={card.href}

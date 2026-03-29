@@ -14,6 +14,7 @@ model User {
   password  String
   role      Role     @default(USER)
   inviteCodeUsed String?
+  pointAdjustments PointAdjustment[]
   
   totalPoints Int @default(0)
   betsWon     Int @default(0)
@@ -24,7 +25,10 @@ model User {
   updatedAt DateTime @updatedAt
   
   bets Bet[]
-  
+  leagueMemberships LeagueMember[] @relation("LeagueMemberships")
+  createdLeagues    League[]       @relation("LeagueCreator")
+  messages          Message[]      @relation("UserMessages")
+
   @@index([totalPoints])
   @@index([username])
 }
@@ -71,14 +75,49 @@ enum BetStatus {
 }
 
 model League {
-  id         String   @id @default(cuid())
-  name       String
-  seasonYear Int
-  startDate  DateTime
-  endDate    DateTime
-  
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  creatorId   String
+  creator     User           @relation("LeagueCreator", fields: [creatorId], references: [id])
+  isPublic    Boolean        @default(false)
+  joinCode    String         @unique
+  minMembers  Int            @default(3)
+  maxMembers  Int            @default(20)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  members     LeagueMember[]
+  messages    Message[]
+
+  @@index([joinCode])
+}
+
+model LeagueMember {
+  id       String   @id @default(cuid())
+  leagueId String
+  league   League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation("LeagueMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("MEMBER") // "MEMBER" or "ADMIN"
+  status   String   @default("ACTIVE") // "PENDING", "ACTIVE", "REMOVED"
+  joinedAt DateTime @default(now())
+
+  @@unique([leagueId, userId])
+  @@index([userId])
+  @@index([leagueId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("UserMessages", fields: [userId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([leagueId])
+  @@index([userId])
 }
 
 model BonusBet {
@@ -108,4 +147,16 @@ model InviteCode {
   usedAt    DateTime?
   
   @@index([code])
+}
+
+model PointAdjustment {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adjustedBy  String
+  amount      Int
+  reason      String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
 }

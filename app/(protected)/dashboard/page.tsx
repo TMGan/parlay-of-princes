@@ -1,5 +1,6 @@
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getUserById, getUserBetsForWeek } from "@/lib/db/queries";
+import { getUserById, getUserBetsForWeek, getUserLeagues } from "@/lib/db/queries";
 import { getWeekNumber } from "@/lib/utils/format";
 import { formatPoints, formatOdds } from "@/lib/utils/format";
 import Link from "next/link";
@@ -10,6 +11,11 @@ export default async function DashboardPage() {
 
   if (!currentUser) {
     return null;
+  }
+
+  const userLeagues = await getUserLeagues(currentUser.id);
+  if (userLeagues.length === 0) {
+    redirect('/leagues/onboarding');
   }
 
   const user = await getUserById(currentUser.id);

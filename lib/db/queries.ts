@@ -188,3 +188,95 @@ export async function getAllUsersForAdmin() {
     }
   });
 }
+
+// Get all users with their stats
+export async function getAllUsersWithStats() {
+  const users = await prisma.user.findMany({
+    include: {
+      bets: {
+        select: {
+          status: true
+        }
+      }
+    },
+    orderBy: {
+      totalPoints: "desc"
+    }
+  });
+
+  return users.map((user) => {
+    const betsWon = user.bets.filter((bet) => bet.status === "WON").length;
+    const betsLost = user.bets.filter((bet) => bet.status === "LOST").length;
+    const totalBets = betsWon + betsLost;
+    const winRate = totalBets > 0 ? Math.round((betsWon / totalBets) * 100) : 0;
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      totalPoints: user.totalPoints,
+      betsWon,
+      betsLost,
+      winRate,
+      createdAt: user.createdAt
+    };
+  });
+}
+
+// Get single user with full details
+export async function getUserWithDetails(userId: string) {
+  return await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      bets: {
+        orderBy: {
+          createdAt: "desc"
+        }
+      }
+    }
+  });
+}
+
+// Adjust user points
+export async function adjustUserPoints(
+  userId: string,
+  amount: number,
+  reason: string,
+  adjustedBy: string
+) {
+  return await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        totalPoints: {
+          increment: amount
+        }
+      }
+    }),
+    prisma.pointAdjustment.create({
+      data: {
+        userId,
+        adjustedBy,
+        amount,
+        reason
+      }
+    })
+  ]);
+}
+
+// Change user role
+export async function changeUserRole(userId: string, newRole: "USER" | "ADMIN") {
+  return await prisma.user.update({
+    where: { id: userId },
+    data: { role: newRole }
+  });
+}
+
+// Re-export league queries and types
+export * from './league-queries';
+export type * from '@/lib/types/league';
+
+// Re-export chat queries and types
+export * from './chat-queries';
+export type * from '@/lib/types/chat';

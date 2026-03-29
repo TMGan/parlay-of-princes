@@ -4,13 +4,14 @@ import { BetResolutionForm } from "@/components/admin/BetResolutionForm";
 import { HistoricalBetForm } from "@/components/admin/HistoricalBetForm";
 import { formatOdds, getWeekNumber } from "@/lib/utils/format";
 import { getAllUsersForAdmin } from "@/lib/db/queries";
+import { ResolvedBetsList, type ResolvedBet } from "@/components/admin/ResolvedBetsList";
 
 export default async function AdminBetsPage() {
   await requireAdmin();
 
   const currentWeek = getWeekNumber(new Date());
 
-  const [pendingBets, allUsers] = await Promise.all([
+  const [pendingBets, resolvedBetsRaw, allUsers] = await Promise.all([
     prisma.bet.findMany({
       where: {
         status: "PENDING"
@@ -26,8 +27,38 @@ export default async function AdminBetsPage() {
         gameStartTime: "asc"
       }
     }),
+    prisma.bet.findMany({
+      where: {
+        status: {
+          in: ["WON", "LOST"]
+        }
+      },
+      include: {
+        user: {
+          select: { username: true }
+        }
+      },
+      orderBy: {
+        updatedAt: "desc"
+      },
+      take: 20
+    }),
     getAllUsersForAdmin()
   ]);
+
+  const resolvedBets: ResolvedBet[] = resolvedBetsRaw.map((bet) => ({
+    id: bet.id,
+    sport: bet.sport,
+    weekNumber: bet.weekNumber,
+    description: bet.description,
+    oddsAmerican: bet.oddsAmerican,
+    isKingLock: bet.isKingLock,
+    status: bet.status as "WON" | "LOST",
+    gameStartTime: bet.gameStartTime.toISOString(),
+    user: {
+      username: bet.user.username
+    }
+  }));
 
   return (
     <div className="space-y-8">
@@ -76,6 +107,14 @@ export default async function AdminBetsPage() {
           ))}
         </div>
       )}
+
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-bold">Recently Resolved Bets</h2>
+          <p className="text-gray-400 text-sm">Flip outcomes if something was resolved incorrectly.</p>
+        </div>
+        <ResolvedBetsList bets={resolvedBets} />
+      </div>
 
       <div className="card mt-8">
         <h2 className="text-2xl font-bold mb-6">Add Historical Bet</h2>

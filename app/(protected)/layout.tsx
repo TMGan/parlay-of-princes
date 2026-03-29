@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserLeagues } from "@/lib/db/league-queries";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import { LogOut, Home, Trophy, User, Settings, TrendingUp } from "lucide-react";
+import { LeagueSwitcher } from "@/components/leagues/LeagueSwitcher";
 
 async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -10,6 +12,8 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   if (!user) {
     redirect("/login");
   }
+
+  const userLeagues = await getUserLeagues(user.id);
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,6 +58,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
                 <Trophy size={20} />
                 <span>Leaderboard</span>
               </Link>
+              <LeagueSwitcher leagues={userLeagues} />
               <Link
                 href="/profile"
                 className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
