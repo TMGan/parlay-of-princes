@@ -1,3 +1,6 @@
+import { getCurrentUser } from '@/lib/auth/session';
+import { redirect } from 'next/navigation';
+
 const highlights = [
   {
     title: "Build regal parlays",
@@ -16,7 +19,9 @@ const highlights = [
   }
 ]
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
+  if (user) redirect('/dashboard');
   return (
     <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 opacity-60">
