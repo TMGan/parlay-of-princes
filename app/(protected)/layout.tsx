@@ -51,13 +51,6 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
                 <TrendingUp size={20} />
                 <span>Live Odds</span>
               </Link>
-              <Link
-                href="/leaderboard"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
-              >
-                <Trophy size={20} />
-                <span>Leaderboard</span>
-              </Link>
               <LeagueSwitcher leagues={userLeagues} />
               <Link
                 href="/profile"
