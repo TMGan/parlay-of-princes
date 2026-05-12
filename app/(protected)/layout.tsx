@@ -5,6 +5,7 @@ import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import { LogOut, Home, Trophy, User, Settings, TrendingUp } from "lucide-react";
 import { LeagueSwitcher } from "@/components/leagues/LeagueSwitcher";
+import { MobileNav } from "@/components/nav/MobileNav";
 
 async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -14,6 +15,11 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   }
 
   const userLeagues = await getUserLeagues(user.id);
+
+  const signOutAction = async () => {
+    "use server";
+    await signOut({ redirectTo: "/login" });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,23 +76,34 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
-            {/* User Info & Logout */}
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-400 text-sm hidden sm:block">{user.name}</span>
+            {/* Right side */}
+            <div className="flex items-center space-x-2">
+              {/* Username — visible on sm+ but hidden on mobile */}
+              <span className="text-gray-400 text-sm hidden sm:block md:block">
+                {user.name}
+              </span>
+
+              {/* Desktop logout — hidden on mobile */}
               <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/login" });
-                }}
+                action={signOutAction}
+                className="hidden md:block"
               >
                 <button
                   type="submit"
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
                 >
                   <LogOut size={20} />
-                  <span className="hidden sm:block">Logout</span>
+                  <span className="hidden lg:block">Logout</span>
                 </button>
               </form>
+
+              {/* Mobile nav — hamburger + drawer, hidden on desktop */}
+              <MobileNav
+                username={user.username}
+                leagues={userLeagues}
+                isAdmin={user.role === "ADMIN"}
+                signOutAction={signOutAction}
+              />
             </div>
           </div>
         </div>

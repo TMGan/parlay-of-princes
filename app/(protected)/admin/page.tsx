@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { isSuperAdmin } from "@/lib/auth/permissions";
 import { prisma } from "@/lib/db/client";
 import Link from "next/link";
-import { Users, Key, Trophy, Settings, Shield } from "lucide-react";
+import { Users, Key, Trophy, Settings, Shield, Star } from "lucide-react";
 
 export default async function AdminPage() {
   const admin = await requireAdmin();
@@ -47,6 +47,15 @@ export default async function AdminPage() {
       stat: `${pendingBets} pending`,
       color: "text-accent",
       bgColor: "bg-accent/10"
+    },
+    {
+      title: "Bonus Picks",
+      description: "Create weekly bonus picks for users",
+      icon: Star,
+      href: "/admin/bonus-bets",
+      stat: "Manage picks",
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-400/10"
     },
     {
       title: "System Settings",

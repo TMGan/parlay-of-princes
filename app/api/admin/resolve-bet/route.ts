@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { updateBetStatus, updateUserStats } from "@/lib/db/queries";
+import { handleError, handleValidationError } from "@/lib/security/error-handler";
+
+const VALID_STATUSES = new Set(["WON", "LOST", "VOIDED"]);
 
 export async function POST(req: Request) {
   try {
@@ -9,28 +12,18 @@ export async function POST(req: Request) {
     const { betId, status } = await req.json();
 
     if (!betId || !status) {
-      return NextResponse.json({ error: "betId and status are required" }, { status: 400 });
+      return handleValidationError("betId and status are required");
     }
 
-    if (!["WON", "LOST", "VOIDED"].includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    if (!VALID_STATUSES.has(status)) {
+      return handleValidationError("Status must be WON, LOST, or VOIDED");
     }
 
-    // Update bet status (this also calculates and awards points)
     const bet = await updateBetStatus(betId, status);
-
-    // Recalculate user stats
     await updateUserStats(bet.userId);
 
     return NextResponse.json({ success: true, bet });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Resolve bet error:", error);
-
-    if (message === "Forbidden - Admin access required") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    return NextResponse.json({ error: "Failed to resolve bet" }, { status: 500 });
+  } catch (error) {
+    return handleError(error, "Resolve Bet");
   }
 }

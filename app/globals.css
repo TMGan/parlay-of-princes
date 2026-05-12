@@ -2,6 +2,7 @@
 
 :root {
   --background: #000000;
+  --background-light: #111118;
   --foreground: #f8fafc;
   --muted: #14141c;
   --border: #1f1f2b;
@@ -12,6 +13,7 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-light: var(--background-light);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);

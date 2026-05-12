@@ -5,6 +5,7 @@ import { getWeekNumber } from '@/lib/utils/format';
 import { StructuredBetForm } from '@/components/betting/StructuredBetForm';
 import { ManualBetForm } from '@/components/betting/ManualBetForm';
 import { UserBetsList } from '@/components/betting/UserBetsList';
+import { BonusBetCard } from '@/components/betting/BonusBetCard';
 
 export default async function BetsPage() {
   const user = await getCurrentUser();
@@ -72,6 +73,9 @@ export default async function BetsPage() {
               canPlaceKingLock={canPlaceKingLock}
             />
           </div>
+
+          {/* Weekly Bonus Pick */}
+          <BonusBetCard />
         </div>
 
         {/* Current Week Bets */}

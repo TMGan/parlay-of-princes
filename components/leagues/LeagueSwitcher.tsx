@@ -68,7 +68,7 @@ export function LeagueSwitcher({ leagues, currentLeagueId }: LeagueSwitcherProps
             aria-hidden="true"
           />
           <div
-            className="absolute right-0 mt-2 w-64 bg-background-light border border-gray-800 rounded-lg shadow-xl z-50"
+            className="absolute right-0 mt-2 w-64 bg-background-light border border-gray-700 rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.8)] z-50 ring-1 ring-white/5"
             role="listbox"
             aria-label="Your leagues"
           >

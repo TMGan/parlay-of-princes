@@ -18,6 +18,7 @@ const config = {
         },
         background: {
           DEFAULT: "#000000",
+          light: "#111118",
           foreground: "#f8fafc"
         },
         foreground: "#f8fafc",

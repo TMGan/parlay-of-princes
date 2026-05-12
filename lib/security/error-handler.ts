@@ -24,23 +24,21 @@ function toErrorWithMessage(maybeError: unknown): ErrorWithMessage {
 }
 
 export function handleError(error: unknown, context: string) {
-  const errorWithMessage = toErrorWithMessage(error);
-  console.error(`[${context}] Error:`, errorWithMessage);
+  const err = toErrorWithMessage(error);
+  console.error(`[${context}] Error:`, err);
+
+  // Map auth errors thrown by requireAuth / requireAdmin to proper HTTP status codes
+  if (err.message === 'Unauthorized') {
+    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  }
+  if (err.message.startsWith('Forbidden')) {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
 
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  if (isDevelopment) {
-    return NextResponse.json(
-      {
-        error: errorWithMessage.message || 'An error occurred',
-        context,
-      },
-      { status: 500 }
-    );
-  }
-
   return NextResponse.json(
-    { error: 'An unexpected error occurred. Please try again.' },
+    { error: isDevelopment ? err.message : 'An unexpected error occurred. Please try again.' },
     { status: 500 }
   );
 }
