@@ -199,8 +199,38 @@ export async function isLeagueMember(leagueId: string, userId: string): Promise<
 }
 
 /**
- * Get league leaderboard.
- * Uses a single JOIN query against pre-computed user stats for optimal performance.
+ * Recalculate and persist per-league stats for a user across all their active leagues.
+ * Called after every bet resolution. Only counts bets placed after the member joined
+ * so mid-season joiners start fresh and re-resolutions stay accurate.
+ */
+export async function updateLeagueMemberStats(userId: string): Promise<void> {
+  const memberships = await prisma.leagueMember.findMany({
+    where: { userId, status: 'ACTIVE' },
+  });
+
+  await Promise.all(
+    memberships.map(async (membership) => {
+      const bets = await prisma.bet.findMany({
+        where: { userId, createdAt: { gte: membership.joinedAt } },
+      });
+
+      const leaguePoints = bets
+        .filter((b) => b.status === 'WON')
+        .reduce((sum, b) => sum + (b.pointsAwarded ?? 0), 0);
+      const leagueBetsWon = bets.filter((b) => b.status === 'WON').length;
+      const leagueBetsLost = bets.filter((b) => b.status === 'LOST').length;
+      const leagueBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
+
+      await prisma.leagueMember.update({
+        where: { id: membership.id },
+        data: { leaguePoints, leagueBetsWon, leagueBetsLost, leagueBiggestHit },
+      });
+    })
+  );
+}
+
+/**
+ * Get league leaderboard using per-league stats.
  */
 export async function getLeagueLeaderboard(leagueId: string): Promise<LeaderboardEntry[]> {
   const results = await prisma.$queryRaw<
@@ -219,14 +249,14 @@ export async function getLeagueLeaderboard(leagueId: string): Promise<Leaderboar
       u.username,
       u.email,
       lm.role,
-      u."totalPoints",
-      u."betsWon",
-      u."betsLost"
+      lm."leaguePoints"  AS "totalPoints",
+      lm."leagueBetsWon" AS "betsWon",
+      lm."leagueBetsLost" AS "betsLost"
     FROM "User" u
     INNER JOIN "LeagueMember" lm ON u.id = lm."userId"
     WHERE lm."leagueId" = ${leagueId}
       AND lm.status = 'ACTIVE'
-    ORDER BY u."totalPoints" DESC
+    ORDER BY lm."leaguePoints" DESC
   `;
 
   return results.map((row) => {

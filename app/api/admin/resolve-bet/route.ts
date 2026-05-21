@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { updateBetStatus, updateUserStats } from "@/lib/db/queries";
+import { updateLeagueMemberStats } from "@/lib/db/league-queries";
 import { handleError, handleValidationError } from "@/lib/security/error-handler";
 
 const VALID_STATUSES = new Set(["WON", "LOST", "VOIDED"]);
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
 
     const bet = await updateBetStatus(betId, status);
     await updateUserStats(bet.userId);
+    await updateLeagueMemberStats(bet.userId);
 
     return NextResponse.json({ success: true, bet });
   } catch (error) {

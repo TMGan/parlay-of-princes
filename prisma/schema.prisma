@@ -103,6 +103,12 @@ model LeagueMember {
   status   String   @default("ACTIVE") // "PENDING", "ACTIVE", "REMOVED"
   joinedAt DateTime @default(now())
 
+  // Per-league stats — recalculated from bets placed after joinedAt
+  leaguePoints     Int @default(0)
+  leagueBetsWon    Int @default(0)
+  leagueBetsLost   Int @default(0)
+  leagueBiggestHit Int @default(0)
+
   @@unique([leagueId, userId])
   @@index([userId])
   @@index([leagueId])
