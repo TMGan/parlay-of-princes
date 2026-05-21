@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getUserLeagues } from "@/lib/db/league-queries";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
+import Image from "next/image";
 import { LogOut, Home, Trophy, User, Settings, TrendingUp, BarChart2 } from "lucide-react";
 import { LeagueSwitcher } from "@/components/leagues/LeagueSwitcher";
 import { MobileNav } from "@/components/nav/MobileNav";
@@ -29,7 +30,15 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <Image
+                src="/logo.png"
+                alt="Parlay of Princes"
+                width={48}
+                height={48}
+                className="object-contain"
+                priority
+              />
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:block">
                 Parlay of Princes
               </span>
             </Link>
