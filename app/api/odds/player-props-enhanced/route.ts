@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 import { handleError } from '@/lib/security/error-handler';
+import { getCached, setCached } from '@/lib/cache/odds-cache';
 
 const ODDS_API_KEY = process.env.ODDS_API_KEY;
 const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
 
-// Sport-specific player prop markets
 const SPORT_MARKETS: Record<string, string> = {
   americanfootball_nfl:
     'player_pass_tds,player_pass_yds,player_rush_yds,player_receptions,player_reception_yds',
@@ -49,9 +49,30 @@ interface PlayerProp {
   bookmaker: string;
 }
 
+function extractProps(bookmaker: Bookmaker): PlayerProp[] {
+  const props: PlayerProp[] = [];
+  bookmaker.markets?.forEach((market) => {
+    market.outcomes?.forEach((outcome) => {
+      if (outcome.price >= 100) {
+        props.push({
+          id: `${market.key}_${outcome.description ?? outcome.name}_${outcome.name}_${outcome.point ?? 'nopoint'}`.replace(/\s+/g, '_'),
+          marketKey: market.key,
+          marketName: market.key.replace(/_/g, ' ').toUpperCase(),
+          playerName: outcome.description ?? outcome.name,
+          propType: outcome.name,
+          line: outcome.point ?? null,
+          odds: outcome.price,
+          description: `${outcome.description ?? outcome.name} ${outcome.name} ${outcome.point ?? ''}`.trim(),
+          bookmaker: bookmaker.title,
+        });
+      }
+    });
+  });
+  return props;
+}
+
 export async function GET(req: Request) {
   try {
-    // Rate limiting: 60 requests per 15 minutes per IP
     const forwardedFor = req.headers.get('x-forwarded-for');
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
     const rateLimitResult = rateLimit(`odds-props-${ip}`, 60);
@@ -60,10 +81,7 @@ export async function GET(req: Request) {
     }
 
     if (!ODDS_API_KEY) {
-      return NextResponse.json(
-        { error: 'Odds API key not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Odds API key not configured' }, { status: 500 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -74,49 +92,38 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
     }
 
-    const markets = SPORT_MARKETS[sport] || SPORT_MARKETS.americanfootball_nfl;
+    // Return cached response if fresh
+    const cacheKey = `props:${sport}:${eventId}`;
+    const cached = getCached<PlayerProp[]>(cacheKey);
+    if (cached) return NextResponse.json(cached);
+
+    const markets = SPORT_MARKETS[sport] ?? SPORT_MARKETS['americanfootball_nfl'];
 
     const response = await fetch(
-      `${ODDS_API_BASE}/sports/${sport}/events/${eventId}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=${markets}&oddsFormat=american`,
-      {
-        next: { revalidate: 300 }, // Cache for 5 minutes
-      }
+      `${ODDS_API_BASE}/sports/${sport}/events/${eventId}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=${markets}&oddsFormat=american`
     );
 
+    if (response.status === 401 || response.status === 422) {
+      return NextResponse.json(
+        { error: 'Odds API quota exceeded. Try again tomorrow.' },
+        { status: 503 }
+      );
+    }
+
     if (!response.ok) {
-      throw new Error('Failed to fetch player props');
+      throw new Error(`Odds API error: ${response.status}`);
     }
 
     const data = (await response.json()) as OddsData;
 
-    // Transform data to flat list of props with only positive odds
-    const props: PlayerProp[] = [];
-
-    const bookmaker = data.bookmakers?.[0]; // Use first bookmaker (usually DraftKings/FanDuel)
-
-    if (bookmaker?.markets) {
-      bookmaker.markets.forEach((market: Market) => {
-        market.outcomes?.forEach((outcome: Outcome) => {
-          // Only include positive odds (+100 or higher)
-          if (outcome.price >= 100) {
-            props.push({
-              id: `${market.key}_${outcome.description || outcome.name}_${outcome.name}_${outcome.point || 'nopoint'}`.replace(/\s+/g, '_'),
-              marketKey: market.key,
-              marketName: market.key.replace(/_/g, ' ').toUpperCase(),
-              playerName: outcome.description || outcome.name,
-              propType: outcome.name, // "Over" or "Under"
-              line: outcome.point || null,
-              odds: outcome.price,
-              description: `${outcome.description || outcome.name} ${outcome.name} ${
-                outcome.point || ''
-              }`.trim(),
-              bookmaker: bookmaker.title,
-            });
-          }
-        });
-      });
+    // Try each bookmaker in order until we find one with props
+    let props: PlayerProp[] = [];
+    for (const bookmaker of data.bookmakers ?? []) {
+      props = extractProps(bookmaker);
+      if (props.length > 0) break;
     }
 
+    setCached(cacheKey, props);
     return NextResponse.json(props);
   } catch (error) {
     return handleError(error, 'Player Props');
