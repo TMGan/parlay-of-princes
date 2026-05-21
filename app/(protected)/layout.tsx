@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getUserLeagues } from "@/lib/db/league-queries";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
-import { LogOut, Home, Trophy, User, Settings, TrendingUp } from "lucide-react";
+import { LogOut, Home, Trophy, User, Settings, TrendingUp, BarChart2 } from "lucide-react";
 import { LeagueSwitcher } from "@/components/leagues/LeagueSwitcher";
 import { MobileNav } from "@/components/nav/MobileNav";
 
@@ -49,6 +49,13 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
               >
                 <Trophy size={20} />
                 <span>My Bets</span>
+              </Link>
+              <Link
+                href="/leaderboard"
+                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              >
+                <BarChart2 size={20} />
+                <span>Leaderboard</span>
               </Link>
               <Link
                 href="/odds"

@@ -15,6 +15,7 @@ import {
   Users,
   Plus,
   Crown,
+  BarChart2,
 } from 'lucide-react';
 import type { getUserLeagues } from '@/lib/db/league-queries';
 
@@ -37,6 +38,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: '/dashboard', label: 'Dashboard', icon: <Home size={20} /> },
   { href: '/bets', label: 'My Bets', icon: <Trophy size={20} /> },
+  { href: '/leaderboard', label: 'Leaderboard', icon: <BarChart2 size={20} /> },
   { href: '/odds', label: 'Live Odds', icon: <TrendingUp size={20} /> },
   { href: '/profile', label: 'Profile', icon: <User size={20} /> },
   { href: '/admin', label: 'Admin', icon: <Settings size={20} />, adminOnly: true },
