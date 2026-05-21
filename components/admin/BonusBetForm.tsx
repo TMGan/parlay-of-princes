@@ -4,12 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, ChevronRight, RotateCcw } from 'lucide-react';
 
-const SPORTS = [
-  { key: 'americanfootball_nfl', label: 'NFL' },
-  { key: 'basketball_nba', label: 'NBA' },
-  { key: 'baseball_mlb', label: 'MLB' },
-  { key: 'icehockey_nhl', label: 'NHL' },
-];
+import { API_SPORTS as SPORTS } from '@/lib/constants/sports';
 
 interface Game {
   id: string;

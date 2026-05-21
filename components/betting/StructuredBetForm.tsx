@@ -29,12 +29,7 @@ interface PlayerProp {
   marketName: string;
 }
 
-const SPORTS = [
-  { key: 'americanfootball_nfl', label: 'NFL' },
-  { key: 'basketball_nba', label: 'NBA' },
-  { key: 'baseball_mlb', label: 'MLB' },
-  { key: 'icehockey_nhl', label: 'NHL' },
-];
+import { API_SPORTS as SPORTS } from '@/lib/constants/sports';
 
 export function StructuredBetForm(props: StructuredBetFormProps) {
   const { canPlaceRegularBet, canPlaceKingLock } = props;

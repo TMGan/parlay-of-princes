@@ -14,6 +14,9 @@ const SPORT_MARKETS: Record<string, string> = {
   baseball_mlb:
     'player_hits,player_total_bases,player_rbis,player_runs_scored,player_strikeouts,player_home_runs',
   icehockey_nhl: 'player_points,player_shots_on_goal,player_assists,player_goals',
+  mma_mixed_martial_arts: 'h2h',
+  boxing_boxing: 'h2h',
+  golf_pga_tour: 'golfer_win_tournament,golfer_top_5_finish,golfer_top_10_finish',
 };
 
 interface Outcome {

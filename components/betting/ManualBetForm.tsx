@@ -11,12 +11,7 @@ interface ManualBetFormProps {
   canPlaceKingLock: boolean;
 }
 
-const SPORTS = [
-  { key: 'NFL', label: 'NFL' },
-  { key: 'NBA', label: 'NBA' },
-  { key: 'MLB', label: 'MLB' },
-  { key: 'NHL', label: 'NHL' },
-];
+import { MANUAL_SPORTS } from '@/lib/constants/sports';
 
 export function ManualBetForm(props: ManualBetFormProps) {
   const { canPlaceRegularBet, canPlaceKingLock } = props;
@@ -25,6 +20,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
   // Form state
   const [isExpanded, setIsExpanded] = useState(false);
   const [sport, setSport] = useState('');
+  const [customSport, setCustomSport] = useState('');
   const [description, setDescription] = useState('');
   const [odds, setOdds] = useState('');
   const [gameTime, setGameTime] = useState('');
@@ -41,7 +37,8 @@ export function ManualBetForm(props: ManualBetFormProps) {
 
     try {
       // Validation
-      if (!sport || !description || !odds || !gameTime) {
+      const resolvedSport = sport === 'Other' ? customSport.trim() : sport;
+      if (!resolvedSport || !description || !odds || !gameTime) {
         throw new Error('All fields are required');
       }
 
@@ -68,7 +65,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sport,
+          sport: resolvedSport,
           description: description.trim(),
           oddsAmerican: oddsNumber,
           gameStartTime: gameStartTime.toISOString(),
@@ -83,6 +80,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
 
       // Reset form
       setSport('');
+      setCustomSport('');
       setDescription('');
       setOdds('');
       setGameTime('');
@@ -143,12 +141,22 @@ export function ManualBetForm(props: ManualBetFormProps) {
           required
         >
           <option value="">Select sport...</option>
-          {SPORTS.map((s) => (
-            <option key={s.key} value={s.key}>
-              {s.label}
-            </option>
+          {MANUAL_SPORTS.map((s) => (
+            <option key={s} value={s}>{s}</option>
           ))}
+          <option value="Other">Other</option>
         </select>
+        {sport === 'Other' && (
+          <input
+            type="text"
+            value={customSport}
+            onChange={(e) => setCustomSport(e.target.value)}
+            placeholder="Enter sport name..."
+            maxLength={50}
+            required
+            className="w-full mt-2 px-4 py-2 bg-background border border-gray-800 rounded focus:border-primary focus:outline-none"
+          />
+        )}
       </div>
 
       {/* Description */}

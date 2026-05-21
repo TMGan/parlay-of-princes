@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { EventCard } from "./EventCard"
 import type { SportsEvent } from "./EventCard"
+import { API_SPORTS } from "@/lib/constants/sports"
 
 interface OddsBrowserProps {
   userId: string
@@ -15,12 +16,7 @@ export function OddsBrowser({ userId }: OddsBrowserProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
-  const sports = [
-    { key: "americanfootball_nfl", label: "NFL" },
-    { key: "basketball_nba", label: "NBA" },
-    { key: "baseball_mlb", label: "MLB" },
-    { key: "icehockey_nhl", label: "NHL" }
-  ]
+  const sports = API_SPORTS
 
   useEffect(() => {
     fetchEvents()
