@@ -36,6 +36,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
                 width={48}
                 height={48}
                 className="object-contain"
+                placeholder="empty"
                 priority
               />
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:block">
