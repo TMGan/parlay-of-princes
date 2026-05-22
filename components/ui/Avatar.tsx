@@ -10,11 +10,12 @@ const COLORS = [
 ];
 
 function getColor(username: string) {
+  if (!username) return COLORS[0]!;
   let hash = 0;
   for (let i = 0; i < username.length; i++) {
     hash = username.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return COLORS[Math.abs(hash) % COLORS.length];
+  return COLORS[Math.abs(hash) % COLORS.length] ?? COLORS[0]!;
 }
 
 const SIZE = {
@@ -33,7 +34,7 @@ export function Avatar({
   size?: keyof typeof SIZE;
   className?: string;
 }) {
-  const initials = username.slice(0, 2).toUpperCase();
+  const initials = (username ?? '?').slice(0, 2).toUpperCase();
   return (
     <div
       className={`${SIZE[size]} ${getColor(username)} ${className} rounded-full flex items-center justify-center font-bold text-white flex-shrink-0`}

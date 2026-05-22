@@ -31,7 +31,7 @@ export default async function LeaguePage({
     getLeagueWithMembers(leagueId),
     getLeagueLeaderboard(leagueId),
     isLeagueAdmin(leagueId, user.id),
-    getLeagueActivity(leagueId),
+    getLeagueActivity(leagueId).catch(() => []),
   ]);
 
   if (!league) {
