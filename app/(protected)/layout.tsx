@@ -46,31 +46,31 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex flex-1 items-center justify-center gap-6">
               <Link
                 href="/dashboard"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
               >
                 <Home size={20} />
                 <span>Dashboard</span>
               </Link>
               <Link
                 href="/bets"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
               >
                 <Trophy size={20} />
                 <span>My Bets</span>
               </Link>
               <Link
                 href="/leaderboard"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
               >
                 <BarChart2 size={20} />
                 <span>Leaderboard</span>
               </Link>
               <Link
                 href="/odds"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
               >
                 <TrendingUp size={20} />
                 <span>Live Odds</span>
@@ -78,7 +78,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
               <LeagueSwitcher leagues={userLeagues} />
               <Link
                 href="/profile"
-                className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
               >
                 <User size={20} />
                 <span>Profile</span>
