@@ -4,7 +4,7 @@ import { getUserLeagues } from "@/lib/db/league-queries";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, Home, Trophy, User, Settings, TrendingUp, BarChart2 } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { LeagueSwitcher } from "@/components/leagues/LeagueSwitcher";
 import { MobileNav } from "@/components/nav/MobileNav";
@@ -46,50 +46,29 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center justify-center gap-6">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
-              >
-                <Home size={20} />
-                <span>Dashboard</span>
-              </Link>
-              <Link
-                href="/bets"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
-              >
-                <Trophy size={20} />
-                <span>My Bets</span>
-              </Link>
-              <Link
-                href="/leaderboard"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
-              >
-                <BarChart2 size={20} />
-                <span>Leaderboard</span>
-              </Link>
-              <Link
-                href="/odds"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
-              >
-                <TrendingUp size={20} />
-                <span>Live Odds</span>
-              </Link>
+            <div className="hidden md:flex items-center justify-center gap-2">
+              {[
+                { href: '/dashboard', label: 'Dashboard' },
+                { href: '/bets', label: 'My Bets' },
+                { href: '/leaderboard', label: 'Leaderboard' },
+                { href: '/odds', label: 'Live Odds' },
+                { href: '/profile', label: 'Profile' },
+              ].map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="px-3 py-1.5 rounded-md border border-gray-700 text-sm text-gray-300 hover:text-white hover:border-gray-500 hover:bg-white/5 transition-all whitespace-nowrap"
+                >
+                  {label}
+                </Link>
+              ))}
               <LeagueSwitcher leagues={userLeagues} />
-              <Link
-                href="/profile"
-                className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
-              >
-                <User size={20} />
-                <span>Profile</span>
-              </Link>
               {user.role === "ADMIN" && (
                 <Link
                   href="/admin"
-                  className="flex items-center space-x-2 text-secondary hover:text-secondary-light transition-colors"
+                  className="px-3 py-1.5 rounded-md border border-secondary/50 text-sm text-secondary hover:bg-secondary/10 transition-all whitespace-nowrap"
                 >
-                  <Settings size={20} />
-                  <span>Admin</span>
+                  Admin
                 </Link>
               )}
             </div>
