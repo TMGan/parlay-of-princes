@@ -6,6 +6,8 @@ import {
   isLeagueAdmin,
   getLeagueLeaderboard,
 } from '@/lib/db/queries';
+import { getLeagueActivity } from '@/lib/db/league-queries';
+import { LeagueActivityFeed } from '@/components/leagues/LeagueActivityFeed';
 import { LeagueOverview } from '@/components/leagues/LeagueOverview';
 import { LeagueLeaderboard } from '@/components/leagues/LeagueLeaderboard';
 import { LeagueChat } from '@/components/leagues/LeagueChat';
@@ -25,10 +27,11 @@ export default async function LeaguePage({
     redirect('/leagues/join');
   }
 
-  const [league, leaderboard, userIsAdmin] = await Promise.all([
+  const [league, leaderboard, userIsAdmin, activities] = await Promise.all([
     getLeagueWithMembers(leagueId),
     getLeagueLeaderboard(leagueId),
     isLeagueAdmin(leagueId, user.id),
+    getLeagueActivity(leagueId),
   ]);
 
   if (!league) {
@@ -41,8 +44,9 @@ export default async function LeaguePage({
       <LeagueOverview league={league} currentUserId={user.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <LeagueLeaderboard leaderboard={leaderboard} currentUserId={user.id} />
+          <LeagueActivityFeed activities={activities} />
         </div>
 
         <div className="lg:col-span-1">

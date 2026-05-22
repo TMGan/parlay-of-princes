@@ -56,6 +56,13 @@ export async function getLeaderboard() {
 }
 
 // Bet Queries
+export async function getAllUserBets(userId: string) {
+  return prisma.bet.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function getUserBetsForWeek(userId: string, weekNumber: number) {
   return prisma.bet.findMany({
     where: {

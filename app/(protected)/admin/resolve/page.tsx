@@ -1,74 +1,86 @@
-import { requireAdmin } from "@/lib/auth/session";
-import { prisma } from "@/lib/db/client";
-import { BetResolutionForm } from "@/components/admin/BetResolutionForm";
-import { formatOdds, getWeekNumber } from "@/lib/utils/format";
+import { requireAdmin } from '@/lib/auth/session';
+import { prisma } from '@/lib/db/client';
+import { BetResolutionForm } from '@/components/admin/BetResolutionForm';
+import { BulkResolvePanel } from '@/components/admin/BulkResolvePanel';
+import { WeekSelector } from '@/components/admin/WeekSelector';
+import { formatOdds, getWeekNumber } from '@/lib/utils/format';
 
-export default async function AdminResolvePage() {
+export default async function AdminResolvePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
   await requireAdmin();
 
+  const { week } = await searchParams;
   const currentWeek = getWeekNumber(new Date());
+  const selectedWeek = week ? Math.max(1, Math.min(52, Number(week))) : currentWeek;
 
   const pendingBets = await prisma.bet.findMany({
-    where: {
-      status: "PENDING"
-    },
-    include: {
-      user: {
-        select: {
-          username: true
-        }
-      }
-    },
-    orderBy: {
-      gameStartTime: "asc"
-    }
+    where: { status: 'PENDING', weekNumber: selectedWeek },
+    include: { user: { select: { username: true } } },
+    orderBy: { gameStartTime: 'asc' },
   });
+
+  // Week range for selector — current week down to week 1
+  const weekOptions = Array.from({ length: currentWeek }, (_, i) => currentWeek - i);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Resolve Bets
-        </h1>
-        <p className="text-gray-400 mt-2">
-          Week {currentWeek} • Mark bets as won, lost, or voided and update user points
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Resolve Bets
+          </h1>
+          <p className="text-gray-400 mt-2">
+            Week {selectedWeek} • {pendingBets.length} pending
+          </p>
+        </div>
+        <WeekSelector currentWeek={currentWeek} selectedWeek={selectedWeek} weekOptions={weekOptions} />
       </div>
 
       {pendingBets.length === 0 ? (
         <div className="card text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">No Pending Bets</h2>
-          <p className="text-gray-400">
-            All bets have been resolved. Check back after users place new bets.
-          </p>
+          <div className="text-4xl mb-4">✅</div>
+          <h2 className="text-xl font-bold mb-2">All Clear</h2>
+          <p className="text-gray-400">No pending bets for week {selectedWeek}.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {pendingBets.map((bet) => (
-            <div key={bet.id} className="card">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="text-sm font-semibold text-secondary px-2 py-1 bg-secondary/10 rounded">
-                      {bet.sport}
-                    </span>
-                    <span className="text-sm text-gray-400">Week {bet.weekNumber}</span>
-                    {bet.isKingLock && (
-                      <span className="text-sm font-semibold text-primary px-2 py-1 bg-primary/10 rounded">
-                        👑 KING LOCK
+        <div className="space-y-6">
+          <BulkResolvePanel bets={pendingBets} />
+
+          <div className="space-y-4">
+            {pendingBets.map((bet) => (
+              <div key={bet.id} className="card">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-sm font-semibold text-secondary px-2 py-1 bg-secondary/10 rounded">
+                        {bet.sport}
                       </span>
-                    )}
+                      <span className="text-sm text-gray-400">Wk {bet.weekNumber}</span>
+                      {bet.isKingLock && (
+                        <span className="text-sm font-semibold text-primary px-2 py-1 bg-primary/10 rounded">
+                          👑 KING LOCK
+                        </span>
+                      )}
+                      {bet.isBonusBet && (
+                        <span className="text-sm font-semibold text-amber-400 px-2 py-1 bg-amber-400/10 rounded">
+                          ⭐ BONUS
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold mb-1">{bet.description}</h3>
+                    <p className="text-sm text-gray-400">
+                      @{bet.user.username} • {formatOdds(bet.oddsLocked)} •{' '}
+                      {new Date(bet.gameStartTime).toLocaleString()}
+                    </p>
                   </div>
-                  <h3 className="font-semibold mb-1">{bet.description}</h3>
-                  <p className="text-sm text-gray-400">
-                    {bet.user.username} • {formatOdds(bet.oddsLocked)} •{" "}
-                    {new Date(bet.gameStartTime).toLocaleString()}
-                  </p>
+                  <BetResolutionForm betId={bet.id} />
                 </div>
-                <BetResolutionForm betId={bet.id} />
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

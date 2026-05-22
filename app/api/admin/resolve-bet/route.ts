@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/session";
-import { updateBetStatus, updateUserStats } from "@/lib/db/queries";
-import { updateLeagueMemberStats } from "@/lib/db/league-queries";
+import { updateBetStatus, updateUserStats, getUserById } from "@/lib/db/queries";
+import { updateLeagueMemberStats, createBetResolvedActivities } from "@/lib/db/league-queries";
 import { handleError, handleValidationError } from "@/lib/security/error-handler";
 
 const VALID_STATUSES = new Set(["WON", "LOST", "VOIDED"]);
@@ -21,8 +21,21 @@ export async function POST(req: Request) {
     }
 
     const bet = await updateBetStatus(betId, status);
-    await updateUserStats(bet.userId);
-    await updateLeagueMemberStats(bet.userId);
+    const [user] = await Promise.all([
+      getUserById(bet.userId),
+      updateUserStats(bet.userId),
+      updateLeagueMemberStats(bet.userId),
+    ]);
+
+    if (user && (status === 'WON' || status === 'LOST' || status === 'VOIDED')) {
+      await createBetResolvedActivities(
+        bet.userId,
+        user.username,
+        bet.description,
+        status as 'WON' | 'LOST' | 'VOIDED',
+        bet.pointsAwarded
+      );
+    }
 
     return NextResponse.json({ success: true, bet });
   } catch (error) {

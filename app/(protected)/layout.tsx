@@ -5,6 +5,7 @@ import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import Image from "next/image";
 import { LogOut, Home, Trophy, User, Settings, TrendingUp, BarChart2 } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import { LeagueSwitcher } from "@/components/leagues/LeagueSwitcher";
 import { MobileNav } from "@/components/nav/MobileNav";
 
@@ -95,10 +96,11 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
 
             {/* Right side */}
             <div className="flex items-center space-x-2">
-              {/* Username — visible on sm+ but hidden on mobile */}
-              <span className="text-gray-400 text-sm hidden sm:block md:block">
-                {user.name}
-              </span>
+              {/* Avatar + username */}
+              <div className="hidden sm:flex items-center gap-2">
+                <Avatar username={user.username ?? user.name ?? '?'} size="sm" />
+                <span className="text-gray-400 text-sm">{user.name}</span>
+              </div>
 
               {/* Desktop logout — hidden on mobile */}
               <form

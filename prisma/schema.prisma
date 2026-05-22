@@ -89,6 +89,7 @@ model League {
   updatedAt   DateTime       @updatedAt
   members     LeagueMember[]
   messages    Message[]
+  activities  LeagueActivity[]
 
   @@index([joinCode])
 }
@@ -125,6 +126,20 @@ model Message {
 
   @@index([leagueId])
   @@index([userId])
+}
+
+model LeagueActivity {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  userId    String
+  username  String
+  type      String   // "BET_WON" | "BET_LOST" | "BET_VOIDED" | "MEMBER_JOINED"
+  message   String
+  points    Int?
+  createdAt DateTime @default(now())
+
+  @@index([leagueId, createdAt])
 }
 
 model BonusBet {

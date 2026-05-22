@@ -26,6 +26,13 @@ export function LeagueOverview({ league, currentUserId }: LeagueOverviewProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyInviteLink = () => {
+    const url = `${window.location.origin}/leagues/join?code=${league.joinCode}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -97,15 +104,19 @@ export function LeagueOverview({ league, currentUserId }: LeagueOverviewProps) {
         </div>
       </div>
 
-      {isAdmin && (
-        <div className="card bg-background-light/50 p-4">
-          <p className="text-sm text-gray-400">
-            <strong className="text-white">Admin tip:</strong> Share the join code{' '}
-            <strong className="text-secondary font-mono">{league.joinCode}</strong> with
-            friends to invite them!
-          </p>
+      <div className="card bg-background-light/50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Invite friends</p>
+          <p className="text-xs text-gray-400 mt-0.5">Share the link or code <span className="font-mono text-secondary">{league.joinCode}</span></p>
         </div>
-      )}
+        <button
+          onClick={copyInviteLink}
+          className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary rounded-lg text-sm font-medium transition-colors"
+        >
+          {copied ? <Check size={16} /> : <Copy size={16} />}
+          {copied ? 'Copied!' : 'Copy Invite Link'}
+        </button>
+      </div>
     </div>
   );
 }

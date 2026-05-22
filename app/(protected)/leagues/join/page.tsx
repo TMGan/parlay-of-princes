@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
-export default function JoinLeaguePage() {
+function JoinLeagueForm() {
   const router = useRouter();
+  const params = useSearchParams();
 
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState(params.get('code')?.toUpperCase() ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -129,5 +130,13 @@ export default function JoinLeaguePage() {
         </ol>
       </div>
     </div>
+  );
+}
+
+export default function JoinLeaguePage() {
+  return (
+    <Suspense>
+      <JoinLeagueForm />
+    </Suspense>
   );
 }

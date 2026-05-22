@@ -1,78 +1,88 @@
 import { getCurrentUser } from "@/lib/auth/session";
-import { getUserById } from "@/lib/db/queries";
+import { getUserById, getAllUserBets } from "@/lib/db/queries";
 import { formatPoints } from "@/lib/utils/format";
+import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { BetHistory } from "@/components/profile/BetHistory";
+import { Avatar } from "@/components/ui/Avatar";
+import { TrendingUp, Trophy, Target, Flame } from "lucide-react";
 
 export default async function ProfilePage() {
   const currentUser = await getCurrentUser();
+  if (!currentUser) return null;
 
-  if (!currentUser) {
-    return null;
-  }
+  const [user, allBets] = await Promise.all([
+    getUserById(currentUser.id),
+    getAllUserBets(currentUser.id),
+  ]);
 
-  const user = await getUserById(currentUser.id);
+  if (!user) return <div>User not found</div>;
 
-  if (!user) {
-    return <div>User not found</div>;
-  }
+  const winRate =
+    user.betsWon + user.betsLost > 0
+      ? Math.round((user.betsWon / (user.betsWon + user.betsLost)) * 100)
+      : 0;
+
+  const stats = [
+    { label: 'Total Points', value: formatPoints(user.totalPoints), icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Bets Won', value: user.betsWon, icon: Trophy, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: 'Win Rate', value: `${winRate}%`, icon: Target, color: 'text-accent', bg: 'bg-accent/10' },
+    { label: 'Biggest Hit', value: user.biggestHit > 0 ? formatPoints(user.biggestHit) : '—', icon: Flame, color: 'text-secondary', bg: 'bg-secondary/10' },
+  ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Your Profile
-        </h1>
-        <p className="text-gray-400 mt-2">Manage your account and view your stats</p>
+      {/* Header */}
+      <div className="flex items-center gap-5">
+        <Avatar username={user.username} size="xl" />
+        <div>
+          <h1 className="text-3xl font-bold">{user.username}</h1>
+          <p className="text-gray-400 text-sm mt-1">{user.email}</p>
+          <p className="text-gray-500 text-xs mt-0.5">
+            {user.role === 'ADMIN' ? '👑 Admin' : 'Member'} · Joined {new Date(user.createdAt).toLocaleDateString()}
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h2 className="text-xl font-bold mb-4">Account Information</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-400">Username</label>
-              <p className="text-lg font-medium">{user.username}</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <div key={s.label} className="card flex items-center gap-3">
+            <div className={`p-2.5 rounded-lg ${s.bg}`}>
+              <s.icon className={s.color} size={20} />
             </div>
             <div>
-              <label className="text-sm text-gray-400">Email</label>
-              <p className="text-lg font-medium">{user.email}</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-400">Role</label>
-              <p className="text-lg font-medium">{user.role === "ADMIN" ? "👑 Admin" : "User"}</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-400">Member Since</label>
-              <p className="text-lg font-medium">{new Date(user.createdAt).toLocaleDateString()}</p>
+              <p className="text-xs text-gray-400">{s.label}</p>
+              <p className="text-xl font-bold">{s.value}</p>
             </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="card">
-          <h2 className="text-xl font-bold mb-4">Performance Summary</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Total Points</span>
-              <span className="text-2xl font-bold text-primary">{formatPoints(user.totalPoints)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Bets Won</span>
-              <span className="text-xl font-bold text-green-500">{user.betsWon}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Bets Lost</span>
-              <span className="text-xl font-bold text-red-500">{user.betsLost}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Win Rate</span>
-              <span className="text-xl font-bold">
-                {user.betsWon + user.betsLost > 0
-                  ? `${Math.round((user.betsWon / (user.betsWon + user.betsLost)) * 100)}%`
-                  : "0%"}
-              </span>
-            </div>
+      {/* Settings + History */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ProfileEditForm currentUsername={user.username} />
+
+        <div className="card space-y-3">
+          <h2 className="text-xl font-bold">Account Info</h2>
+          <div className="space-y-3 text-sm">
+            {[
+              { label: 'Username', value: `@${user.username}` },
+              { label: 'Email', value: user.email },
+              { label: 'Role', value: user.role === 'ADMIN' ? '👑 Admin' : 'Member' },
+              { label: 'Member since', value: new Date(user.createdAt).toLocaleDateString() },
+              { label: 'Total bets', value: allBets.length },
+              { label: 'Bets lost', value: user.betsLost },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between items-center border-b border-gray-800 pb-2 last:border-0 last:pb-0">
+                <span className="text-gray-400">{label}</span>
+                <span className="font-medium">{value}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      <BetHistory bets={allBets} />
     </div>
   );
 }

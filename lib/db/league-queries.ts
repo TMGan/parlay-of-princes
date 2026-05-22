@@ -278,6 +278,67 @@ export async function getLeagueLeaderboard(leagueId: string): Promise<Leaderboar
 }
 
 /**
+ * Create a league activity event.
+ */
+export async function createLeagueActivity(data: {
+  leagueId: string;
+  userId: string;
+  username: string;
+  type: string;
+  message: string;
+  points?: number;
+}): Promise<void> {
+  await prisma.leagueActivity.create({ data });
+}
+
+/**
+ * Get recent activity for a league (last 30 events).
+ */
+export async function getLeagueActivity(leagueId: string) {
+  return prisma.leagueActivity.findMany({
+    where: { leagueId },
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+  });
+}
+
+/**
+ * Create activity entries for all leagues a user is in (called on bet resolve).
+ */
+export async function createBetResolvedActivities(
+  userId: string,
+  username: string,
+  betDescription: string,
+  status: 'WON' | 'LOST' | 'VOIDED',
+  pointsAwarded?: number | null
+): Promise<void> {
+  const memberships = await prisma.leagueMember.findMany({
+    where: { userId, status: 'ACTIVE' },
+  });
+
+  if (memberships.length === 0) return;
+
+  const type = `BET_${status}`;
+  const message =
+    status === 'WON'
+      ? `${username} won +${pointsAwarded ?? 0} pts on "${betDescription}"`
+      : status === 'LOST'
+      ? `${username} lost their bet on "${betDescription}"`
+      : `${username}'s bet was voided: "${betDescription}"`;
+
+  await prisma.leagueActivity.createMany({
+    data: memberships.map((m) => ({
+      leagueId: m.leagueId,
+      userId,
+      username,
+      type,
+      message,
+      points: status === 'WON' ? (pointsAwarded ?? 0) : null,
+    })),
+  });
+}
+
+/**
  * Get all pending join requests for a league.
  */
 export async function getPendingJoinRequests(leagueId: string) {
