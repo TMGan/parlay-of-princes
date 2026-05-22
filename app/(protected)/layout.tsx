@@ -46,7 +46,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex flex-1 items-center justify-center gap-6">
+            <div className="hidden md:flex flex-1 items-center justify-center gap-6 pl-12">
               <Link
                 href="/dashboard"
                 className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
