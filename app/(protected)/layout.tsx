@@ -30,7 +30,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
+            <Link href="/dashboard" className="flex flex-1 items-center gap-2 shrink-0">
               <Image
                 src="/logo.png"
                 alt="Parlay of Princes"
@@ -95,7 +95,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Right side */}
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-1 items-center justify-end space-x-2">
               {/* Avatar + username */}
               <div className="hidden sm:flex items-center gap-2">
                 <Avatar username={user.username ?? user.name ?? '?'} size="sm" />
