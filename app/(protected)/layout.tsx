@@ -28,9 +28,9 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
       {/* Top Navigation */}
       <nav className="bg-background-light border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="grid grid-cols-3 items-center h-16">
             {/* Logo */}
-            <Link href="/dashboard" className="flex flex-1 items-center gap-2 shrink-0">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <Image
                 src="/logo.png"
                 alt="Parlay of Princes"
@@ -46,7 +46,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex flex-1 items-center justify-center gap-6 pl-12">
+            <div className="hidden md:flex items-center justify-center gap-6">
               <Link
                 href="/dashboard"
                 className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors whitespace-nowrap"
@@ -95,7 +95,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Right side */}
-            <div className="flex flex-1 items-center justify-end space-x-2">
+            <div className="flex items-center justify-end space-x-2">
               {/* Avatar + username */}
               <div className="hidden sm:flex items-center gap-2">
                 <Avatar username={user.username ?? user.name ?? '?'} size="sm" />
