@@ -1,6 +1,8 @@
+import Link from 'next/link';
 import { requireAuth } from '@/lib/auth/session';
 import { getLeaderboard } from '@/lib/db/queries';
 import { formatPoints } from '@/lib/utils/format';
+import { Avatar } from '@/components/ui/Avatar';
 
 const RANK_STYLES: Record<number, string> = {
   1: 'bg-yellow-500/20 text-yellow-500',
@@ -57,14 +59,20 @@ export default async function LeaderboardPage() {
                       </td>
 
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`font-medium ${isMe ? 'text-primary' : ''}`}>
-                            {entry.username}
-                          </span>
-                          {isMe && (
-                            <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">You</span>
-                          )}
-                        </div>
+                        <Link
+                          href={isMe ? '/profile' : `/players/${entry.username}`}
+                          className="flex items-center gap-3 group"
+                        >
+                          <Avatar username={entry.username} size="sm" />
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`font-medium group-hover:underline ${isMe ? 'text-primary' : ''}`}>
+                              {entry.username}
+                            </span>
+                            {isMe && (
+                              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">You</span>
+                            )}
+                          </div>
+                        </Link>
                       </td>
 
                       <td className="px-6 py-4 text-right">

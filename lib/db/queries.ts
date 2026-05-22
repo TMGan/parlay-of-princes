@@ -153,6 +153,45 @@ export async function updateUserStats(userId: string) {
   });
 }
 
+// Public profile query — no email, no password, no pending bets
+export async function getPublicProfile(username: string) {
+  return prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      role: true,
+      totalPoints: true,
+      betsWon: true,
+      betsLost: true,
+      biggestHit: true,
+      createdAt: true,
+      bets: {
+        where: { status: { not: 'PENDING' } },
+        orderBy: { resolvedAt: 'desc' },
+        select: {
+          id: true,
+          sport: true,
+          description: true,
+          oddsLocked: true,
+          isKingLock: true,
+          isBonusBet: true,
+          status: true,
+          pointsAwarded: true,
+          weekNumber: true,
+          resolvedAt: true,
+        },
+      },
+      leagueMemberships: {
+        where: { status: 'ACTIVE' },
+        include: {
+          league: { select: { id: true, name: true } },
+        },
+      },
+    },
+  });
+}
+
 // Invite Code Queries
 export async function createInviteCode(code: string) {
   return prisma.inviteCode.create({
