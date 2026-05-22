@@ -28,7 +28,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
       {/* Top Navigation */}
       <nav className="bg-background-light border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-3 items-center h-16">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16">
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image
