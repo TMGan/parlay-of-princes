@@ -30,7 +30,7 @@ export default async function AdminResolvePage({
     orderBy: { gameStartTime: 'asc' },
   });
 
-  // Get all usernames that have pending bets this week (for the user filter dropdown)
+  // Get all usernames that have pending bets this week (for autocomplete hints)
   const usersWithPending = await prisma.bet.findMany({
     where: { status: 'PENDING', weekNumber: selectedWeek },
     select: { user: { select: { username: true } } },

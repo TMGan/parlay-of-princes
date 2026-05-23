@@ -3,7 +3,7 @@ import { getUserById, getAllUserBets } from "@/lib/db/queries";
 import { formatPoints } from "@/lib/utils/format";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { BetHistory } from "@/components/profile/BetHistory";
-import { Avatar } from "@/components/ui/Avatar";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { TrendingUp, Trophy, Target, Flame } from "lucide-react";
 
 export default async function ProfilePage() {
@@ -32,9 +32,9 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-5">
-        <Avatar username={user.username} size="xl" />
-        <div>
+      <div className="flex items-start gap-6 flex-wrap">
+        <AvatarUpload username={user.username} currentAvatarUrl={user.avatarUrl ?? null} />
+        <div className="pt-1">
           <h1 className="text-3xl font-bold">{user.username}</h1>
           <p className="text-gray-400 text-sm mt-1">{user.email}</p>
           <p className="text-gray-500 text-xs mt-0.5">

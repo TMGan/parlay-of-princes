@@ -17,6 +17,8 @@ model User {
   inviteCodeUsed String?
   pointAdjustments PointAdjustment[]
   
+  avatarUrl   String?
+
   totalPoints Int @default(0)
   betsWon     Int @default(0)
   betsLost    Int @default(0)

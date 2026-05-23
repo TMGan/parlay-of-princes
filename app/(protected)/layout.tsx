@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserLeagues } from "@/lib/db/league-queries";
 import { getActiveBonusBet } from "@/lib/db/bonus-bet-queries";
+import { prisma } from "@/lib/db/client";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,9 +18,10 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
     redirect("/login");
   }
 
-  const [userLeagues, activeBonusPick] = await Promise.all([
+  const [userLeagues, activeBonusPick, dbUser] = await Promise.all([
     getUserLeagues(user.id),
     getActiveBonusBet().catch(() => null),
+    prisma.user.findUnique({ where: { id: user.id }, select: { avatarUrl: true } }),
   ]);
 
   const signOutAction = async () => {
@@ -99,7 +101,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-end space-x-2">
               {/* Avatar + username */}
               <div className="hidden sm:flex items-center gap-2">
-                <Avatar username={user.username ?? user.name ?? '?'} size="sm" />
+                <Avatar username={user.username ?? user.name ?? '?'} imageUrl={dbUser?.avatarUrl ?? null} size="sm" />
                 <span className="text-gray-400 text-sm">{user.name}</span>
               </div>
 
