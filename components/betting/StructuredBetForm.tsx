@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 interface StructuredBetFormProps {
   userId: string;
   currentWeek: number;
+  leagueId: string;
   canPlaceRegularBet: boolean;
   canPlaceKingLock: boolean;
 }
@@ -32,7 +33,7 @@ interface PlayerProp {
 import { API_SPORTS as SPORTS } from '@/lib/constants/sports';
 
 export function StructuredBetForm(props: StructuredBetFormProps) {
-  const { canPlaceRegularBet, canPlaceKingLock } = props;
+  const { canPlaceRegularBet, canPlaceKingLock, leagueId } = props;
   const router = useRouter();
 
   // Step tracking
@@ -141,6 +142,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
           oddsAmerican: selectedProp.odds,
           gameStartTime: new Date(selectedGame.commenceTime).toISOString(),
           isKingLock,
+          leagueId,
         }),
       });
 
@@ -172,7 +174,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-accent/10 border border-accent text-accent px-4 py-3 rounded text-sm">
+        <div className="bg-accent/10 border border-accent text-accent px-4 py-3 rounded-xl text-sm">
           {error}
         </div>
       )}
@@ -186,7 +188,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
               <button
                 key={sport.key}
                 onClick={() => setSelectedSport(sport.key)}
-                className="p-3 bg-background rounded border border-gray-800 hover:border-primary transition-colors text-center font-medium"
+                className="p-3 bg-background rounded-xl border border-gray-800 hover:border-primary transition-colors text-center font-medium"
               >
                 {sport.label}
               </button>
@@ -206,7 +208,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
                 setSelectedSport('');
                 setGames([]);
               }}
-              className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-lg hover:bg-secondary transition-colors"
+              className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-full hover:bg-secondary transition-colors"
             >
               ← Change Sport
             </button>
@@ -224,7 +226,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
                 <button
                   key={game.id}
                   onClick={() => setSelectedGame(game)}
-                  className="w-full p-3 bg-background rounded border border-gray-800 hover:border-primary transition-colors text-left"
+                  className="w-full p-3 bg-background rounded-xl border border-gray-800 hover:border-primary transition-colors text-left"
                 >
                   <div className="font-medium text-sm">
                     {game.awayTeam} @ {game.homeTeam}
@@ -250,7 +252,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
                 setSelectedGame(null);
                 setPlayerProps([]);
               }}
-              className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-lg hover:bg-secondary transition-colors"
+              className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-full hover:bg-secondary transition-colors"
             >
               ← Change Game
             </button>
@@ -270,7 +272,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
                 <button
                   key={prop.id}
                   onClick={() => setSelectedProp(prop)}
-                  className={`w-full p-3 rounded border transition-colors text-left ${
+                  className={`w-full p-3 rounded-xl border transition-colors text-left ${
                     selectedProp?.id === prop.id
                       ? 'bg-primary/10 border-primary'
                       : 'bg-background border-gray-800 hover:border-primary'

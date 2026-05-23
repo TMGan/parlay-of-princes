@@ -9,9 +9,7 @@ export async function GET() {
     const user = await requireAuth();
     const bonusBet = await getActiveBonusBet();
 
-    if (!bonusBet) {
-      return NextResponse.json(null);
-    }
+    if (!bonusBet) return NextResponse.json(null);
 
     const currentWeek = getWeekNumber(new Date());
     const userClaim = await getUserBonusBetForWeek(user.id, currentWeek);

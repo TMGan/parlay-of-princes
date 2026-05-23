@@ -22,17 +22,35 @@ const STATUS_LABELS: Record<BetStatus, string> = {
 
 interface Props {
   bonusBetId: string;
+  sport: string;
   claimed: boolean;
-  claimedStatus: BetStatus | null;
+  claimedBet: { status: BetStatus; description: string } | null;
+  leagueId: string | undefined;
 }
 
-export function BonusBetClaimButton({ bonusBetId, claimed, claimedStatus }: Props) {
+export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, leagueId }: Props) {
   const router = useRouter();
+  const [step, setStep] = useState<'idle' | 'form' | 'done'>('idle');
   const [isClaiming, setIsClaiming] = useState(false);
   const [error, setError] = useState('');
-  const [justClaimed, setJustClaimed] = useState(false);
+
+  // User's pick fields
+  const [description, setDescription] = useState('');
+  const [odds, setOdds] = useState('');
+  const [gameDate, setGameDate] = useState('');
+  const [gameTime, setGameTime] = useState('20:00');
 
   const handleClaim = async () => {
+    if (!description.trim() || !odds || !gameDate) {
+      setError('All fields are required');
+      return;
+    }
+    const oddsNum = Number(odds);
+    if (isNaN(oddsNum) || oddsNum < 100 || oddsNum > 10000) {
+      setError('Odds must be between +100 and +10000');
+      return;
+    }
+
     setIsClaiming(true);
     setError('');
 
@@ -40,13 +58,19 @@ export function BonusBetClaimButton({ bonusBetId, claimed, claimedStatus }: Prop
       const res = await fetch('/api/bets/place-bonus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bonusBetId }),
+        body: JSON.stringify({
+          bonusBetId,
+          description: description.trim(),
+          oddsAmerican: oddsNum,
+          gameStartTime: new Date(`${gameDate}T${gameTime}`).toISOString(),
+          leagueId,
+        }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to claim bonus pick');
+      if (!res.ok) throw new Error(data.error || 'Failed to claim');
 
-      setJustClaimed(true);
+      setStep('done');
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to claim');
@@ -55,53 +79,111 @@ export function BonusBetClaimButton({ bonusBetId, claimed, claimedStatus }: Prop
     }
   };
 
-  if (justClaimed) {
+  if (step === 'done') {
     return (
-      <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 font-semibold">
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 font-semibold">
         <CheckCircle2 size={18} />
         You&apos;re in! Good luck 🤞
       </div>
     );
   }
 
-  if (claimed && claimedStatus) {
+  if (claimed && claimedBet) {
+    const s = claimedBet.status;
     return (
-      <div className={`flex items-center justify-between px-4 py-3 rounded-lg border font-semibold ${STATUS_STYLES[claimedStatus]}`}>
-        <span>You claimed this pick</span>
-        <span>{STATUS_LABELS[claimedStatus]}</span>
+      <div className={`space-y-2 px-4 py-3 rounded-xl border ${STATUS_STYLES[s]}`}>
+        <div className="flex items-center justify-between font-semibold">
+          <span>Your pick: <span className="font-normal">{claimedBet.description}</span></span>
+          <span>{STATUS_LABELS[s]}</span>
+        </div>
       </div>
     );
   }
 
   if (claimed) {
     return (
-      <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-semibold">
+      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-semibold">
         <CheckCircle2 size={18} />
         Claimed — waiting on results
       </div>
     );
   }
 
+  if (step === 'idle') {
+    return (
+      <button
+        onClick={() => setStep('form')}
+        className="btn-primary w-full text-base py-3"
+      >
+        🎯 Make My Pick
+      </button>
+    );
+  }
+
+  // Form step — user fills in their specific pick
   return (
-    <div className="space-y-2">
+    <div className="space-y-4 border border-primary/30 rounded-xl p-4 bg-primary/5">
+      <div className="flex items-center justify-between">
+        <p className="font-semibold text-sm text-primary">Your Pick ({sport})</p>
+        <button onClick={() => { setStep('idle'); setError(''); }} className="text-xs text-gray-400 hover:text-white">✕ Cancel</button>
+      </div>
+
       {error && <p className="text-sm text-red-400">{error}</p>}
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1">Your specific pick *</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. Aaron Judge to hit a home run"
+            maxLength={300}
+            className="w-full px-3 py-2 bg-background border border-gray-700 rounded-xl text-sm focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Your odds (+) *</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">+</span>
+              <input
+                type="number" value={odds} onChange={(e) => setOdds(e.target.value)}
+                placeholder="300" min={100} max={10000}
+                className="w-full pl-7 pr-3 py-2 bg-background border border-gray-700 rounded-xl text-sm focus:border-primary focus:outline-none"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">From your sportsbook</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1">Game / Event Date *</label>
+            <input
+              type="date" value={gameDate} onChange={(e) => setGameDate(e.target.value)}
+              className="w-full px-3 py-2 bg-background border border-gray-700 rounded-xl text-sm focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-400 mb-1">Game Start Time</label>
+          <input
+            type="time" value={gameTime} onChange={(e) => setGameTime(e.target.value)}
+            className="w-full px-3 py-2 bg-background border border-gray-700 rounded-xl text-sm focus:border-primary focus:outline-none"
+          />
+        </div>
+      </div>
+
       <button
         onClick={handleClaim}
         disabled={isClaiming}
-        className="btn-primary w-full disabled:opacity-50 text-base py-3"
+        className="btn-primary w-full disabled:opacity-50"
       >
         {isClaiming ? (
-          <span className="flex items-center justify-center gap-2">
-            <Loader2 className="animate-spin" size={18} />
-            Claiming...
-          </span>
-        ) : (
-          '🎯 Take This Pick'
-        )}
+          <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin" /> Submitting...</span>
+        ) : 'Submit My Pick'}
       </button>
-      <p className="text-xs text-gray-500 text-center">
-        Counts as your bonus bet for the week
-      </p>
     </div>
   );
 }

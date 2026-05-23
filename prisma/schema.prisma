@@ -43,27 +43,32 @@ model Bet {
   id          String     @id @default(cuid())
   userId      String
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  // Which league this bet belongs to (null = legacy / pre-migration bets)
+  leagueId    String?
+  league      League?    @relation("LeagueBets", fields: [leagueId], references: [id])
+
   weekNumber  Int
   sport       String
   description String
-  
+
   oddsAmerican Int
   oddsLocked   Int
-  
+
   isKingLock    Boolean @default(false)
   isBonusBet    Boolean @default(false)
   bonusBetId    String?
-  
+
   status         BetStatus @default(PENDING)
   pointsAwarded  Int?
-  
+
   gameStartTime DateTime
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   resolvedAt    DateTime?
-  
-  @@index([userId, weekNumber])
+
+  @@index([userId, weekNumber, leagueId])
+  @@index([leagueId])
   @@index([status])
   @@index([gameStartTime])
 }
@@ -90,6 +95,7 @@ model League {
   members     LeagueMember[]
   messages    Message[]
   activities  LeagueActivity[]
+  bets        Bet[]            @relation("LeagueBets")
 
   @@index([joinCode])
 }
@@ -144,18 +150,18 @@ model LeagueActivity {
 
 model BonusBet {
   id          String   @id @default(cuid())
-  name        String
-  description String
-  parameters  String   @db.Text
-  
+  name        String                    // e.g. "Dinger Tuesday"
+  description String                    // Admin's event parameters/category
+  sport       String   @default("")    // e.g. "MLB", "Tennis"
+
   availableDate DateTime
   expiryDate    DateTime
-  
+
   createdByUserId String
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([availableDate, expiryDate])
 }
 

@@ -63,11 +63,12 @@ export async function getAllUserBets(userId: string) {
   });
 }
 
-export async function getUserBetsForWeek(userId: string, weekNumber: number) {
+export async function getUserBetsForWeek(userId: string, weekNumber: number, leagueId?: string) {
   return prisma.bet.findMany({
     where: {
       userId,
-      weekNumber
+      weekNumber,
+      ...(leagueId ? { leagueId } : {}),
     },
     orderBy: { createdAt: "desc" }
   });
@@ -75,6 +76,7 @@ export async function getUserBetsForWeek(userId: string, weekNumber: number) {
 
 export async function createBet(data: {
   userId: string;
+  leagueId?: string;
   weekNumber: number;
   sport: string;
   description: string;
@@ -85,9 +87,7 @@ export async function createBet(data: {
   isBonusBet?: boolean;
   bonusBetId?: string;
 }) {
-  return prisma.bet.create({
-    data
-  });
+  return prisma.bet.create({ data });
 }
 
 export async function updateBetStatus(

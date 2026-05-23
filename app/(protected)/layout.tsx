@@ -51,7 +51,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
               </Link>
               <Link
                 href="/bets"
-                className="hidden md:block px-3 py-1.5 rounded-md border border-gray-700 text-sm text-gray-300 hover:text-white hover:border-gray-500 hover:bg-white/5 transition-all whitespace-nowrap"
+                className="hidden md:block px-3 py-1.5 rounded-full border border-gray-700 text-sm text-gray-300 hover:text-white hover:border-gray-500 hover:bg-white/5 transition-all whitespace-nowrap"
               >
                 My Bets
               </Link>
@@ -67,7 +67,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={href}
                   href={href}
-                  className="px-3 py-1.5 rounded-md border border-gray-700 text-sm text-gray-300 hover:text-white hover:border-gray-500 hover:bg-white/5 transition-all whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-full border border-gray-700 text-sm text-gray-300 hover:text-white hover:border-gray-500 hover:bg-white/5 transition-all whitespace-nowrap"
                 >
                   {label}
                 </Link>
@@ -76,7 +76,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
               {/* Bonus Picks with notification dot */}
               <Link
                 href="/bonus-bets"
-                className="relative px-3 py-1.5 rounded-md border border-secondary/50 text-sm text-secondary hover:bg-secondary/10 transition-all whitespace-nowrap"
+                className="relative px-3 py-1.5 rounded-full border border-secondary/50 text-sm text-secondary hover:bg-secondary/10 transition-all whitespace-nowrap"
               >
                 Bonus Picks
                 {activeBonusPick && (
@@ -88,7 +88,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
               {user.role === "ADMIN" && (
                 <Link
                   href="/admin"
-                  className="px-3 py-1.5 rounded-md border border-secondary/50 text-sm text-secondary hover:bg-secondary/10 transition-all whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-full border border-secondary/50 text-sm text-secondary hover:bg-secondary/10 transition-all whitespace-nowrap"
                 >
                   Admin
                 </Link>

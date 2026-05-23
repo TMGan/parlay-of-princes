@@ -51,24 +51,24 @@ export function UserBetsList({ bets }: { bets: Bet[] }) {
           return (
             <div
               key={bet.id}
-              className="bg-background p-4 rounded-lg border border-gray-800 flex items-start justify-between gap-3"
+              className="bg-background p-4 rounded-2xl border border-gray-800 flex items-start justify-between gap-3"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="text-xs font-semibold text-secondary px-2 py-1 bg-secondary/10 rounded">
+                  <span className="text-xs font-semibold text-secondary px-2 py-1 bg-secondary/10 rounded-full">
                     {bet.sport}
                   </span>
                   {bet.isKingLock && (
-                    <span className="text-xs font-semibold text-primary px-2 py-1 bg-primary/10 rounded">
+                    <span className="text-xs font-semibold text-primary px-2 py-1 bg-primary/10 rounded-full">
                       👑 KING LOCK
                     </span>
                   )}
                   {bet.isBonusBet && (
-                    <span className="text-xs font-semibold text-amber-400 px-2 py-1 bg-amber-400/10 rounded">
+                    <span className="text-xs font-semibold text-amber-400 px-2 py-1 bg-amber-400/10 rounded-full">
                       ⭐ BONUS
                     </span>
                   )}
-                  <span className={`text-xs font-semibold px-2 py-1 rounded ${STATUS_STYLE[bet.status] ?? STATUS_STYLE.PENDING}`}>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_STYLE[bet.status] ?? STATUS_STYLE.PENDING}`}>
                     {bet.status}
                   </span>
                 </div>

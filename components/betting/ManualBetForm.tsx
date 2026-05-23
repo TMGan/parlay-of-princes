@@ -1,20 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Camera, X } from 'lucide-react';
+import { MANUAL_SPORTS } from '@/lib/constants/sports';
 
 interface ManualBetFormProps {
   userId: string;
   currentWeek: number;
+  leagueId: string;
   canPlaceRegularBet: boolean;
   canPlaceKingLock: boolean;
 }
 
-import { MANUAL_SPORTS } from '@/lib/constants/sports';
-
 export function ManualBetForm(props: ManualBetFormProps) {
-  const { canPlaceRegularBet, canPlaceKingLock } = props;
+  const { canPlaceRegularBet, canPlaceKingLock, leagueId } = props;
   const router = useRouter();
 
   // Form state
@@ -23,12 +23,60 @@ export function ManualBetForm(props: ManualBetFormProps) {
   const [customSport, setCustomSport] = useState('');
   const [description, setDescription] = useState('');
   const [odds, setOdds] = useState('');
-  const [gameTime, setGameTime] = useState('');
+  const [gameDate, setGameDate] = useState('');
+  const [gameTime, setGameTime] = useState('20:00');
   const [isKingLock, setIsKingLock] = useState(false);
+
+  // Screenshot state
+  const [isParsingSlip, setIsParsingSlip] = useState(false);
+  const [slipError, setSlipError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Loading & errors
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const handleScreenshotUpload = async (file: File) => {
+    setIsParsingSlip(true);
+    setSlipError('');
+
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1] ?? result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/ai/parse-bet-slip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType: file.type }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to parse slip');
+
+      // Auto-fill fields from parsed slip
+      if (data.sport) setSport(MANUAL_SPORTS.includes(data.sport) ? data.sport : 'Other');
+      if (data.sport && !MANUAL_SPORTS.includes(data.sport)) setCustomSport(data.sport);
+      if (data.description) setDescription(data.description);
+      if (data.oddsAmerican) setOdds(String(data.oddsAmerican));
+      if (data.gameStartTime) {
+        const d = new Date(data.gameStartTime);
+        setGameDate(d.toISOString().slice(0, 10));
+        setGameTime(d.toTimeString().slice(0, 5));
+      }
+    } catch (err) {
+      setSlipError(err instanceof Error ? err.message : 'Could not read slip');
+    } finally {
+      setIsParsingSlip(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +84,8 @@ export function ManualBetForm(props: ManualBetFormProps) {
     setError('');
 
     try {
-      // Validation
       const resolvedSport = sport === 'Other' ? customSport.trim() : sport;
-      if (!resolvedSport || !description || !odds || !gameTime) {
+      if (!resolvedSport || !description || !odds || !gameDate) {
         throw new Error('All fields are required');
       }
 
@@ -51,16 +98,11 @@ export function ManualBetForm(props: ManualBetFormProps) {
         throw new Error('Description must be 500 characters or less');
       }
 
-      const gameStartTime = new Date(gameTime);
+      const gameStartTime = new Date(`${gameDate}T${gameTime}`);
       if (isNaN(gameStartTime.getTime())) {
         throw new Error('Invalid game time');
       }
 
-      if (gameStartTime < new Date()) {
-        throw new Error('Game time must be in the future');
-      }
-
-      // Submit bet
       const response = await fetch('/api/bets/place', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,6 +112,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
           oddsAmerican: oddsNumber,
           gameStartTime: gameStartTime.toISOString(),
           isKingLock,
+          leagueId,
         }),
       });
 
@@ -83,7 +126,8 @@ export function ManualBetForm(props: ManualBetFormProps) {
       setCustomSport('');
       setDescription('');
       setOdds('');
-      setGameTime('');
+      setGameDate('');
+      setGameTime('20:00');
       setIsKingLock(false);
       setIsExpanded(false);
 
@@ -102,7 +146,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
     return (
       <button
         onClick={() => setIsExpanded(true)}
-        className="w-full px-4 py-3 bg-background border border-gray-800 rounded-lg hover:border-primary transition-colors text-sm font-medium"
+        className="w-full px-4 py-3 bg-background border border-gray-800 rounded-full hover:border-primary transition-colors text-sm font-medium"
       >
         📝 Enter Bet Manually
       </button>
@@ -122,8 +166,42 @@ export function ManualBetForm(props: ManualBetFormProps) {
         </button>
       </div>
 
+      {/* Screenshot upload */}
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleScreenshotUpload(file);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isParsingSlip}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-dashed border-primary/40 text-sm text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+        >
+          {isParsingSlip ? (
+            <><Loader2 size={15} className="animate-spin" /> Reading slip…</>
+          ) : (
+            <><Camera size={15} /> Upload Bet Slip Screenshot</>
+          )}
+        </button>
+        {slipError && (
+          <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+            <X size={12} /> {slipError}
+          </p>
+        )}
+        {!slipError && !isParsingSlip && (
+          <p className="text-xs text-gray-500 mt-1 text-center">AI will auto-fill the fields below</p>
+        )}
+      </div>
+
       {error && (
-        <div className="bg-accent/10 border border-accent text-accent px-4 py-3 rounded text-sm">
+        <div className="bg-accent/10 border border-accent text-accent px-4 py-3 rounded-xl text-sm">
           {error}
         </div>
       )}
@@ -137,7 +215,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
           id="sport"
           value={sport}
           onChange={(e) => setSport(e.target.value)}
-          className="w-full px-4 py-2 bg-background border border-gray-800 rounded focus:border-primary focus:outline-none"
+          className="w-full px-4 py-2 bg-background border border-gray-800 rounded-xl focus:border-primary focus:outline-none"
           required
         >
           <option value="">Select sport...</option>
@@ -154,7 +232,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
             placeholder="Enter sport name..."
             maxLength={50}
             required
-            className="w-full mt-2 px-4 py-2 bg-background border border-gray-800 rounded focus:border-primary focus:outline-none"
+            className="w-full mt-2 px-4 py-2 bg-background border border-gray-800 rounded-xl focus:border-primary focus:outline-none"
           />
         )}
       </div>
@@ -171,12 +249,10 @@ export function ManualBetForm(props: ManualBetFormProps) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g., Patrick Mahomes Over 2.5 TD Passes"
           maxLength={500}
-          className="w-full px-4 py-2 bg-background border border-gray-800 rounded focus:border-primary focus:outline-none"
+          className="w-full px-4 py-2 bg-background border border-gray-800 rounded-xl focus:border-primary focus:outline-none"
           required
         />
-        <p className="text-xs text-gray-500 mt-1">
-          {description.length}/500 characters
-        </p>
+        <p className="text-xs text-gray-500 mt-1">{description.length}/500 characters</p>
       </div>
 
       {/* Odds */}
@@ -185,9 +261,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
           Odds (American) *
         </label>
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-            +
-          </span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">+</span>
           <input
             id="odds"
             type="number"
@@ -196,28 +270,32 @@ export function ManualBetForm(props: ManualBetFormProps) {
             placeholder="150"
             min={100}
             max={10000}
-            className="w-full pl-8 pr-4 py-2 bg-background border border-gray-800 rounded focus:border-primary focus:outline-none"
+            className="w-full pl-8 pr-4 py-2 bg-background border border-gray-800 rounded-xl focus:border-primary focus:outline-none"
             required
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Must be between +100 and +10000
-        </p>
+        <p className="text-xs text-gray-500 mt-1">Must be between +100 and +10000</p>
       </div>
 
-      {/* Game Time */}
+      {/* Game Date + Time (split for better UX) */}
       <div>
-        <label htmlFor="gameTime" className="block text-sm font-medium mb-2">
-          Game Start Time *
-        </label>
-        <input
-          id="gameTime"
-          type="datetime-local"
-          value={gameTime}
-          onChange={(e) => setGameTime(e.target.value)}
-          className="w-full px-4 py-2 bg-background border border-gray-800 rounded focus:border-primary focus:outline-none"
-          required
-        />
+        <label className="block text-sm font-medium mb-2">Game Start *</label>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="date"
+            value={gameDate}
+            onChange={(e) => setGameDate(e.target.value)}
+            className="px-3 py-2 bg-background border border-gray-800 rounded-xl text-sm focus:border-primary focus:outline-none"
+            required
+          />
+          <input
+            type="time"
+            value={gameTime}
+            onChange={(e) => setGameTime(e.target.value)}
+            className="px-3 py-2 bg-background border border-gray-800 rounded-xl text-sm focus:border-primary focus:outline-none"
+            required
+          />
+        </div>
       </div>
 
       {/* King Lock */}

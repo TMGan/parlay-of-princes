@@ -203,15 +203,20 @@ export async function isLeagueMember(leagueId: string, userId: string): Promise<
  * Called after every bet resolution. Only counts bets placed after the member joined
  * so mid-season joiners start fresh and re-resolutions stay accurate.
  */
-export async function updateLeagueMemberStats(userId: string): Promise<void> {
+export async function updateLeagueMemberStats(userId: string, leagueId?: string): Promise<void> {
   const memberships = await prisma.leagueMember.findMany({
-    where: { userId, status: 'ACTIVE' },
+    where: {
+      userId,
+      status: 'ACTIVE',
+      ...(leagueId ? { leagueId } : {}),
+    },
   });
 
   await Promise.all(
     memberships.map(async (membership) => {
+      // Only count bets explicitly placed in this league
       const bets = await prisma.bet.findMany({
-        where: { userId, createdAt: { gte: membership.joinedAt } },
+        where: { userId, leagueId: membership.leagueId },
       });
 
       const leaguePoints = bets

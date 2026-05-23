@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/session';
 import { deleteBonusBet, updateBonusBet } from '@/lib/db/bonus-bet-queries';
 import { handleError, handleValidationError } from '@/lib/security/error-handler';
-import { sanitizeString, validateOdds } from '@/lib/security/validation';
+import { sanitizeString } from '@/lib/security/validation';
 
 export async function PATCH(
   req: Request,
@@ -12,22 +12,19 @@ export async function PATCH(
     await requireAdmin();
     const { bonusBetId } = await params;
     const body = await req.json();
-    const { name, description, sport, oddsAmerican, gameStartTime, availableDate, expiryDate } = body;
+    const { name, description, sport, availableDate, expiryDate } = body;
 
     const sanitizedName = sanitizeString(name ?? '', 100);
     const sanitizedDescription = sanitizeString(description ?? '', 500);
     const sanitizedSport = sanitizeString(sport ?? '', 50);
 
-    if (!sanitizedName || !sanitizedDescription || !sanitizedSport || !oddsAmerican || !gameStartTime || !availableDate || !expiryDate) {
+    if (!sanitizedName || !sanitizedDescription || !sanitizedSport || !availableDate || !expiryDate) {
       return handleValidationError('All fields are required');
     }
-    const odds = Number(oddsAmerican);
-    if (!validateOdds(odds)) return handleValidationError('Odds must be between +100 and +10000');
 
     const available = new Date(availableDate);
     const expiry = new Date(expiryDate);
-    const gameStart = new Date(gameStartTime);
-    if (isNaN(available.getTime()) || isNaN(expiry.getTime()) || isNaN(gameStart.getTime())) {
+    if (isNaN(available.getTime()) || isNaN(expiry.getTime())) {
       return handleValidationError('Invalid date values');
     }
     if (expiry <= available) return handleValidationError('Expiry must be after available date');
@@ -35,7 +32,7 @@ export async function PATCH(
     const updated = await updateBonusBet(bonusBetId, {
       name: sanitizedName,
       description: sanitizedDescription,
-      parameters: { sport: sanitizedSport, oddsAmerican: odds, gameStartTime: gameStart.toISOString() },
+      sport: sanitizedSport,
       availableDate: available,
       expiryDate: expiry,
     });

@@ -31,9 +31,6 @@ export function BonusBetList({ bonusBets }: Props) {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editSport, setEditSport] = useState('');
-  const [editOdds, setEditOdds] = useState('');
-  const [editGameDate, setEditGameDate] = useState('');
-  const [editGameTime, setEditGameTime] = useState('');
   const [editAvailDate, setEditAvailDate] = useState('');
   const [editAvailTime, setEditAvailTime] = useState('');
   const [editExpiryDate, setEditExpiryDate] = useState('');
@@ -44,10 +41,7 @@ export function BonusBetList({ bonusBets }: Props) {
     setEditError('');
     setEditName(bet.name);
     setEditDescription(bet.description);
-    setEditSport(bet.parameters.sport);
-    setEditOdds(String(bet.parameters.oddsAmerican));
-    setEditGameDate(toLocalDate(bet.parameters.gameStartTime));
-    setEditGameTime(toLocalTime(bet.parameters.gameStartTime));
+    setEditSport(bet.sport);
     setEditAvailDate(toLocalDate(bet.availableDate));
     setEditAvailTime(toLocalTime(bet.availableDate));
     setEditExpiryDate(toLocalDate(bet.expiryDate));
@@ -69,8 +63,6 @@ export function BonusBetList({ bonusBets }: Props) {
           name: editName,
           description: editDescription,
           sport: editSport,
-          oddsAmerican: Number(editOdds),
-          gameStartTime: combine(editGameDate, editGameTime),
           availableDate: combine(editAvailDate, editAvailTime),
           expiryDate: combine(editExpiryDate, editExpiryTime),
         }),
@@ -164,13 +156,11 @@ export function BonusBetList({ bonusBets }: Props) {
               <>
                 <p className="text-sm text-gray-400">{bet.description}</p>
                 <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-                  <span>{bet.parameters.sport}</span>
-                  <span className="text-primary font-bold">+{bet.parameters.oddsAmerican}</span>
+                  <span className="font-medium text-gray-400">{bet.sport}</span>
                   <span>
                     Available: {new Date(bet.availableDate).toLocaleDateString()} –{' '}
                     {new Date(bet.expiryDate).toLocaleDateString()}
                   </span>
-                  <span>Game: {new Date(bet.parameters.gameStartTime).toLocaleString()}</span>
                 </div>
               </>
             )}
@@ -216,26 +206,10 @@ export function BonusBetList({ bonusBets }: Props) {
                       className="w-full px-3 py-1.5 bg-background-light border border-gray-700 rounded text-sm focus:border-primary focus:outline-none resize-none"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Odds (+)</label>
-                    <input
-                      type="number" value={editOdds} onChange={(e) => setEditOdds(e.target.value)} min={100}
-                      className="w-full px-3 py-1.5 bg-background-light border border-gray-700 rounded text-sm focus:border-primary focus:outline-none"
-                    />
-                  </div>
                 </div>
 
                 {/* Date/time pickers */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Game Starts</label>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <input type="date" value={editGameDate} onChange={(e) => setEditGameDate(e.target.value)}
-                        className="px-2 py-1.5 bg-background-light border border-gray-700 rounded text-xs focus:border-primary focus:outline-none" />
-                      <input type="time" value={editGameTime} onChange={(e) => setEditGameTime(e.target.value)}
-                        className="px-2 py-1.5 bg-background-light border border-gray-700 rounded text-xs focus:border-primary focus:outline-none" />
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-400 mb-1">Available From</label>
                     <div className="grid grid-cols-2 gap-1.5">
