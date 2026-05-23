@@ -16,6 +16,7 @@ import {
   Plus,
   Crown,
   BarChart2,
+  Star,
 } from 'lucide-react';
 import type { getUserLeagues } from '@/lib/db/league-queries';
 
@@ -25,6 +26,7 @@ interface MobileNavProps {
   username: string;
   leagues: UserLeagues;
   isAdmin: boolean;
+  hasActiveBonusPick?: boolean;
   signOutAction: () => Promise<void>;
 }
 
@@ -33,18 +35,21 @@ interface NavLink {
   label: string;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  highlight?: boolean;
+  badge?: boolean;
 }
 
 const NAV_LINKS: NavLink[] = [
   { href: '/dashboard', label: 'Dashboard', icon: <Home size={20} /> },
   { href: '/bets', label: 'My Bets', icon: <Trophy size={20} /> },
+  { href: '/bonus-bets', label: 'Bonus Picks', icon: <Star size={20} />, highlight: true, badge: true },
   { href: '/leaderboard', label: 'Leaderboard', icon: <BarChart2 size={20} /> },
   { href: '/odds', label: 'Live Odds', icon: <TrendingUp size={20} /> },
   { href: '/profile', label: 'Profile', icon: <User size={20} /> },
   { href: '/admin', label: 'Admin', icon: <Settings size={20} />, adminOnly: true },
 ];
 
-export function MobileNav({ username, leagues, isAdmin, signOutAction }: MobileNavProps) {
+export function MobileNav({ username, leagues, isAdmin, hasActiveBonusPick, signOutAction }: MobileNavProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -141,22 +146,31 @@ export function MobileNav({ username, leagues, isAdmin, signOutAction }: MobileN
 
           {/* Nav links */}
           <nav className="px-2 space-y-1">
-            {visibleLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(link.href)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-gray-300 hover:bg-background hover:text-white'
-                } ${link.adminOnly ? 'text-secondary hover:text-secondary' : ''}`}
-              >
-                <span className={isActive(link.href) ? 'text-primary' : link.adminOnly ? 'text-secondary' : 'text-gray-400'}>
-                  {link.icon}
-                </span>
-                {link.label}
-              </Link>
-            ))}
+            {visibleLinks.map((link) => {
+              const active = isActive(link.href);
+              const showDot = link.badge && hasActiveBonusPick;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-primary/10 text-primary'
+                      : link.adminOnly || link.highlight
+                      ? 'text-secondary hover:bg-secondary/10 hover:text-secondary'
+                      : 'text-gray-300 hover:bg-background hover:text-white'
+                  }`}
+                >
+                  <span className={active ? 'text-primary' : link.adminOnly || link.highlight ? 'text-secondary' : 'text-gray-400'}>
+                    {link.icon}
+                  </span>
+                  {link.label}
+                  {showDot && (
+                    <span className="ml-auto w-2.5 h-2.5 bg-green-500 rounded-full shrink-0" />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Leagues section */}

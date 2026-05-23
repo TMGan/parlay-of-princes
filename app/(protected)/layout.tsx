@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserLeagues } from "@/lib/db/league-queries";
+import { getActiveBonusBet } from "@/lib/db/bonus-bet-queries";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,7 +17,10 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
     redirect("/login");
   }
 
-  const userLeagues = await getUserLeagues(user.id);
+  const [userLeagues, activeBonusPick] = await Promise.all([
+    getUserLeagues(user.id),
+    getActiveBonusBet().catch(() => null),
+  ]);
 
   const signOutAction = async () => {
     "use server";
@@ -29,27 +33,33 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
       <nav className="bg-background-light border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16">
-            {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <Image
-                src="/logo.png"
-                alt="Parlay of Princes"
-                width={36}
-                height={36}
-                className="object-contain flex-shrink-0"
-                placeholder="empty"
-                priority
-              />
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent whitespace-nowrap hidden sm:block">
-                Parlay of Princes
-              </span>
-            </Link>
+            {/* Logo + My Bets (left side) */}
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <Image
+                  src="/logo.png"
+                  alt="Parlay of Princes"
+                  width={36}
+                  height={36}
+                  className="object-contain flex-shrink-0"
+                  placeholder="empty"
+                  priority
+                />
+                <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent whitespace-nowrap hidden sm:block">
+                  Parlay of Princes
+                </span>
+              </Link>
+              <Link
+                href="/bets"
+                className="hidden md:block px-3 py-1.5 rounded-md border border-gray-700 text-sm text-gray-300 hover:text-white hover:border-gray-500 hover:bg-white/5 transition-all whitespace-nowrap"
+              >
+                My Bets
+              </Link>
+            </div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation (center) */}
             <div className="hidden md:flex items-center justify-center gap-2">
               {[
-                { href: '/dashboard', label: 'Dashboard' },
-                { href: '/bets', label: 'My Bets' },
                 { href: '/leaderboard', label: 'Leaderboard' },
                 { href: '/odds', label: 'Live Odds' },
                 { href: '/profile', label: 'Profile' },
@@ -62,6 +72,18 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
                   {label}
                 </Link>
               ))}
+
+              {/* Bonus Picks with notification dot */}
+              <Link
+                href="/bonus-bets"
+                className="relative px-3 py-1.5 rounded-md border border-secondary/50 text-sm text-secondary hover:bg-secondary/10 transition-all whitespace-nowrap"
+              >
+                Bonus Picks
+                {activeBonusPick && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background-light" />
+                )}
+              </Link>
+
               <LeagueSwitcher leagues={userLeagues} />
               {user.role === "ADMIN" && (
                 <Link
@@ -100,6 +122,7 @@ async function ProtectedLayout({ children }: { children: React.ReactNode }) {
                 username={user.username}
                 leagues={userLeagues}
                 isAdmin={user.role === "ADMIN"}
+                hasActiveBonusPick={!!activeBonusPick}
                 signOutAction={signOutAction}
               />
             </div>
