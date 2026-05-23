@@ -167,10 +167,10 @@ export function AllLeaguesView() {
                     </td>
                     <td className="px-6 py-4">
                       <Link
-                        href={`/leagues/${league.id}`}
+                        href={`/admin/leagues/${league.id}`}
                         className="text-xs px-3 py-1 bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors"
                       >
-                        View
+                        View Details
                       </Link>
                     </td>
                   </tr>

@@ -3,26 +3,42 @@ import { prisma } from '@/lib/db/client';
 import { BetResolutionForm } from '@/components/admin/BetResolutionForm';
 import { BulkResolvePanel } from '@/components/admin/BulkResolvePanel';
 import { WeekSelector } from '@/components/admin/WeekSelector';
+import { ResolveUserFilter } from '@/components/admin/ResolveUserFilter';
 import { formatOdds, getWeekNumber } from '@/lib/utils/format';
 
 export default async function AdminResolvePage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ week?: string; user?: string }>;
 }) {
   await requireAdmin();
 
-  const { week } = await searchParams;
+  const { week, user } = await searchParams;
   const currentWeek = getWeekNumber(new Date());
   const selectedWeek = week ? Math.max(1, Math.min(52, Number(week))) : currentWeek;
+  const selectedUser = user ?? '';
 
   const pendingBets = await prisma.bet.findMany({
-    where: { status: 'PENDING', weekNumber: selectedWeek },
+    where: {
+      status: 'PENDING',
+      weekNumber: selectedWeek,
+      ...(selectedUser
+        ? { user: { username: selectedUser } }
+        : {}),
+    },
     include: { user: { select: { username: true } } },
     orderBy: { gameStartTime: 'asc' },
   });
 
-  // Week range for selector — current week down to week 1
+  // Get all usernames that have pending bets this week (for the user filter dropdown)
+  const usersWithPending = await prisma.bet.findMany({
+    where: { status: 'PENDING', weekNumber: selectedWeek },
+    select: { user: { select: { username: true } } },
+    distinct: ['userId'],
+    orderBy: { user: { username: 'asc' } },
+  });
+  const usernames = usersWithPending.map((b) => b.user.username);
+
   const weekOptions = Array.from({ length: currentWeek }, (_, i) => currentWeek - i);
 
   return (
@@ -33,17 +49,26 @@ export default async function AdminResolvePage({
             Resolve Bets
           </h1>
           <p className="text-gray-400 mt-2">
-            Week {selectedWeek} • {pendingBets.length} pending
+            Week {selectedWeek}
+            {selectedUser && <> · <span className="text-primary">@{selectedUser}</span></>}
+            {' '}· {pendingBets.length} pending
           </p>
         </div>
-        <WeekSelector currentWeek={currentWeek} selectedWeek={selectedWeek} weekOptions={weekOptions} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <ResolveUserFilter usernames={usernames} selectedUser={selectedUser} selectedWeek={selectedWeek} />
+          <WeekSelector currentWeek={currentWeek} selectedWeek={selectedWeek} weekOptions={weekOptions} />
+        </div>
       </div>
 
       {pendingBets.length === 0 ? (
         <div className="card text-center py-12">
           <div className="text-4xl mb-4">✅</div>
           <h2 className="text-xl font-bold mb-2">All Clear</h2>
-          <p className="text-gray-400">No pending bets for week {selectedWeek}.</p>
+          <p className="text-gray-400">
+            {selectedUser
+              ? `No pending bets for @${selectedUser} in week ${selectedWeek}.`
+              : `No pending bets for week ${selectedWeek}.`}
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -72,7 +97,7 @@ export default async function AdminResolvePage({
                     </div>
                     <h3 className="font-semibold mb-1">{bet.description}</h3>
                     <p className="text-sm text-gray-400">
-                      @{bet.user.username} • {formatOdds(bet.oddsLocked)} •{' '}
+                      @{bet.user.username} · {formatOdds(bet.oddsLocked)} ·{' '}
                       {new Date(bet.gameStartTime).toLocaleString()}
                     </p>
                   </div>

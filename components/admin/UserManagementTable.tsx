@@ -40,8 +40,8 @@ export function UserManagementTable({ users, adminEmail, isSuperAdmin }: UserMan
     const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
     const confirmMessage =
       newRole === 'ADMIN'
-        ? 'Promote this user to ADMIN? They will have limited admin powers.'
-        : 'Demote this admin to USER? They will lose admin access.';
+        ? 'Grant site-wide admin access to this user?\n\nSite admins can:\n• Resolve & void bets\n• Create bonus picks\n• Manage invite codes\n• View all pending bets\n\nThey CANNOT promote/demote other users or delete leagues (only you can).'
+        : 'Remove site admin access from this user?\n\nThey will go back to a regular user account and lose all admin abilities.';
 
     if (!confirm(confirmMessage)) return;
 
@@ -169,9 +169,16 @@ export function UserManagementTable({ users, adminEmail, isSuperAdmin }: UserMan
                             {(canPromote(user) || canDemote(user)) && (
                               <button
                                 onClick={() => handleRoleChange(user.id, user.role)}
-                                className="text-xs px-3 py-1 bg-secondary/20 border border-secondary/50 text-secondary rounded hover:bg-secondary/30 transition-colors"
+                                title={user.role === 'ADMIN'
+                                  ? 'Remove site admin access (cannot resolve bets or manage picks)'
+                                  : 'Grant site admin access (can resolve bets, manage picks & invites)'}
+                                className={`text-xs px-3 py-1 rounded border transition-colors ${
+                                  user.role === 'ADMIN'
+                                    ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20'
+                                    : 'bg-secondary/20 border-secondary/50 text-secondary hover:bg-secondary/30'
+                                }`}
                               >
-                                {user.role === 'ADMIN' ? 'Demote' : 'Promote'}
+                                {user.role === 'ADMIN' ? 'Remove Admin' : 'Make Site Admin'}
                               </button>
                             )}
                           </>

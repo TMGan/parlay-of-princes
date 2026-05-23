@@ -75,6 +75,28 @@ export async function deleteBonusBet(id: string) {
   return prisma.bonusBet.delete({ where: { id } });
 }
 
+export async function updateBonusBet(
+  id: string,
+  data: {
+    name: string;
+    description: string;
+    parameters: BonusBetParameters;
+    availableDate: Date;
+    expiryDate: Date;
+  }
+) {
+  return prisma.bonusBet.update({
+    where: { id },
+    data: {
+      name: data.name,
+      description: data.description,
+      parameters: JSON.stringify(data.parameters),
+      availableDate: data.availableDate,
+      expiryDate: data.expiryDate,
+    },
+  });
+}
+
 export async function getUserBonusBetForWeek(userId: string, weekNumber: number) {
   return prisma.bet.findFirst({
     where: { userId, weekNumber, isBonusBet: true },

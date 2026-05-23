@@ -339,6 +339,24 @@ export async function createBetResolvedActivities(
 }
 
 /**
+ * Get all members' bets for a specific week in a league.
+ * Used to show "what everyone picked" on the league page.
+ */
+export async function getLeagueMemberBetsForWeek(leagueId: string, weekNumber: number) {
+  const members = await prisma.leagueMember.findMany({
+    where: { leagueId, status: 'ACTIVE' },
+    select: { userId: true },
+  });
+  const memberIds = members.map((m) => m.userId);
+
+  return prisma.bet.findMany({
+    where: { userId: { in: memberIds }, weekNumber },
+    include: { user: { select: { id: true, username: true } } },
+    orderBy: [{ user: { username: 'asc' } }, { isKingLock: 'desc' }, { createdAt: 'asc' }],
+  });
+}
+
+/**
  * Get all pending join requests for a league.
  */
 export async function getPendingJoinRequests(leagueId: string) {

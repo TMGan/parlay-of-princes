@@ -58,8 +58,8 @@ export default async function AdminPage() {
       bgColor: "bg-yellow-400/10"
     },
     {
-      title: "System Settings",
-      description: "Configure app settings",
+      title: "Platform Stats",
+      description: "Site-wide analytics and performance",
       icon: Settings,
       href: "/admin/settings",
       stat: `${totalBets} total bets`,
