@@ -30,6 +30,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
   // Screenshot state
   const [isParsingSlip, setIsParsingSlip] = useState(false);
   const [slipError, setSlipError] = useState('');
+  const [slipSuccess, setSlipSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Loading & errors
@@ -39,6 +40,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
   const handleScreenshotUpload = async (file: File) => {
     setIsParsingSlip(true);
     setSlipError('');
+    setSlipSuccess(false);
 
     try {
       const reader = new FileReader();
@@ -60,16 +62,19 @@ export function ManualBetForm(props: ManualBetFormProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to parse slip');
 
-      // Auto-fill fields from parsed slip
+      // Auto-fill fields from parsed slip.
+      // gameStartTime is returned as "YYYY-MM-DDTHH:MM" already in ET,
+      // so we slice directly — no Date conversion needed to avoid timezone drift.
       if (data.sport) setSport(MANUAL_SPORTS.includes(data.sport) ? data.sport : 'Other');
       if (data.sport && !MANUAL_SPORTS.includes(data.sport)) setCustomSport(data.sport);
       if (data.description) setDescription(data.description);
       if (data.oddsAmerican) setOdds(String(data.oddsAmerican));
-      if (data.gameStartTime) {
-        const d = new Date(data.gameStartTime);
-        setGameDate(d.toISOString().slice(0, 10));
-        setGameTime(d.toTimeString().slice(0, 5));
+      if (typeof data.gameStartTime === 'string' && data.gameStartTime.length >= 16) {
+        setGameDate(data.gameStartTime.slice(0, 10));   // "YYYY-MM-DD"
+        setGameTime(data.gameStartTime.slice(11, 16));  // "HH:MM"
       }
+      setSlipSuccess(true);
+      if (!isExpanded) setIsExpanded(true);
     } catch (err) {
       setSlipError(err instanceof Error ? err.message : 'Could not read slip');
     } finally {
@@ -130,6 +135,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
       setGameTime('20:00');
       setIsKingLock(false);
       setIsExpanded(false);
+      setSlipSuccess(false);
 
       router.refresh();
     } catch (err) {
@@ -195,7 +201,12 @@ export function ManualBetForm(props: ManualBetFormProps) {
             <X size={12} /> {slipError}
           </p>
         )}
-        {!slipError && !isParsingSlip && (
+        {slipSuccess && !slipError && (
+          <p className="text-xs text-green-400 mt-1 text-center">
+            ✓ Slip read — review the fields below and adjust if needed
+          </p>
+        )}
+        {!slipError && !slipSuccess && !isParsingSlip && (
           <p className="text-xs text-gray-500 mt-1 text-center">AI will auto-fill the fields below</p>
         )}
       </div>
