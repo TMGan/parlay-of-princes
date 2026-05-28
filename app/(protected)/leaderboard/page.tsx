@@ -1,117 +1,90 @@
 import Link from 'next/link';
 import { requireAuth } from '@/lib/auth/session';
-import { getLeaderboard } from '@/lib/db/queries';
+import { getUserLeagues } from '@/lib/db/queries';
 import { formatPoints } from '@/lib/utils/format';
-import { Avatar } from '@/components/ui/Avatar';
-
-const RANK_STYLES: Record<number, string> = {
-  1: 'bg-yellow-500/20 text-yellow-500',
-  2: 'bg-gray-400/20 text-gray-400',
-  3: 'bg-amber-700/20 text-amber-700',
-};
+import { Trophy, Users, TrendingUp, ArrowRight } from 'lucide-react';
 
 export default async function LeaderboardPage() {
   const user = await requireAuth();
-  const leaderboard = await getLeaderboard();
+  const userLeagues = await getUserLeagues(user.id);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Global Leaderboard
+          Leaderboards
         </h1>
-        <p className="text-gray-400 mt-2">{leaderboard.length} players competing</p>
+        <p className="text-gray-400 mt-2">
+          Points are tracked per league — select one to see the standings.
+        </p>
       </div>
 
-      <div className="card overflow-hidden">
-        {leaderboard.length === 0 ? (
-          <p className="text-center py-12 text-gray-400">No bets placed yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-background-light">
-                <tr className="text-left text-gray-400 text-sm">
-                  <th className="px-6 py-4 w-16">Rank</th>
-                  <th className="px-6 py-4">Player</th>
-                  <th className="px-6 py-4 text-right">Points</th>
-                  <th className="px-6 py-4 text-center">W / L</th>
-                  <th className="px-6 py-4 text-center hidden sm:table-cell">Win %</th>
-                  <th className="px-6 py-4 text-right hidden md:table-cell">Best Hit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {leaderboard.map((entry, index) => {
-                  const rank = index + 1;
-                  const rankStyle = RANK_STYLES[rank] ?? 'bg-background text-gray-500';
-                  const isMe = entry.id === user.id;
-                  const total = entry.betsWon + entry.betsLost;
-                  const winRate = total > 0 ? Math.round((entry.betsWon / total) * 100) : 0;
-
-                  return (
-                    <tr
-                      key={entry.id}
-                      className={`hover:bg-background-light transition-colors ${isMe ? 'bg-primary/5' : ''}`}
-                    >
-                      <td className="px-6 py-4">
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm ${rankStyle}`}>
-                          {rank === 1 ? '👑' : rank}
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <Link
-                          href={isMe ? '/profile' : `/players/${entry.username}`}
-                          className="flex items-center gap-3 group"
-                        >
-                          <Avatar username={entry.username} size="sm" />
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`font-medium group-hover:underline ${isMe ? 'text-primary' : ''}`}>
-                              {entry.username}
-                            </span>
-                            {isMe && (
-                              <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">You</span>
-                            )}
-                          </div>
-                        </Link>
-                      </td>
-
-                      <td className="px-6 py-4 text-right">
-                        <span className="text-xl font-bold text-primary">
-                          {formatPoints(entry.totalPoints)}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-4 text-center text-sm">
-                        <span className="text-green-500">{entry.betsWon}</span>
-                        {' / '}
-                        <span className="text-red-500">{entry.betsLost}</span>
-                      </td>
-
-                      <td className="px-6 py-4 text-center hidden sm:table-cell">
-                        <div className="inline-flex items-center gap-2">
-                          <div className="w-16 h-2 bg-background rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-green-500 to-primary"
-                              style={{ width: `${winRate}%` }}
-                            />
-                          </div>
-                          <span className="text-sm w-8 text-right">{winRate}%</span>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-4 text-right hidden md:table-cell">
-                        <span className="text-secondary font-semibold">
-                          {entry.biggestHit > 0 ? `+${formatPoints(entry.biggestHit)}` : '—'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {userLeagues.length === 0 ? (
+        <div className="card text-center py-16 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mx-auto">
+            <Trophy className="text-gray-600" size={28} />
           </div>
-        )}
-      </div>
+          <h2 className="text-xl font-bold text-gray-400">No leagues yet</h2>
+          <p className="text-gray-500 text-sm max-w-xs mx-auto">
+            Join or create a league to compete on the leaderboard.
+          </p>
+          <Link href="/leagues/join" className="btn-primary inline-block mt-2">
+            Find a League
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {userLeagues.map((membership) => {
+            const total = membership.leagueBetsWon + membership.leagueBetsLost;
+            const winRate = total > 0 ? Math.round((membership.leagueBetsWon / total) * 100) : 0;
+            const memberCount = membership.league._count.members;
+
+            return (
+              <Link
+                key={membership.league.id}
+                href={`/leagues/${membership.league.id}`}
+                className="card flex items-center justify-between gap-4 hover:border-primary transition-colors group"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h2 className="text-lg font-bold group-hover:text-primary transition-colors">
+                      {membership.league.name}
+                    </h2>
+                    {membership.role === 'ADMIN' && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/10 text-secondary font-medium">
+                        Admin
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <Users size={13} />
+                      {memberCount} member{memberCount !== 1 ? 's' : ''}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <TrendingUp size={13} />
+                      {winRate}% win rate
+                    </span>
+                  </div>
+                </div>
+
+                {/* Your stats in this league */}
+                <div className="text-right shrink-0">
+                  <p className="text-2xl font-bold text-primary">{formatPoints(membership.leaguePoints)}</p>
+                  <p className="text-xs text-gray-400">
+                    <span className="text-green-500">{membership.leagueBetsWon}W</span>
+                    {' / '}
+                    <span className="text-red-500">{membership.leagueBetsLost}L</span>
+                  </p>
+                </div>
+
+                <ArrowRight size={18} className="text-gray-600 group-hover:text-primary transition-colors shrink-0" />
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

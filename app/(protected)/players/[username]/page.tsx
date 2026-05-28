@@ -4,7 +4,7 @@ import { getPublicProfile } from '@/lib/db/queries';
 import { Avatar } from '@/components/ui/Avatar';
 import { calculateBadges, getCurrentStreak, getHotSport } from '@/lib/utils/badges';
 import { formatPoints, formatDateET } from '@/lib/utils/format';
-import { Trophy, TrendingUp, Target, Flame, Zap, Star } from 'lucide-react';
+import { Trophy, Target, Flame, Zap, Star, Users } from 'lucide-react';
 
 export default async function PlayerProfilePage({
   params,
@@ -28,6 +28,12 @@ export default async function PlayerProfilePage({
   const streak = getCurrentStreak(resolvedBets);
   const hotSport = getHotSport(resolvedBets);
   const badges = calculateBadges(profile.bets, profile.totalPoints, profile.betsWon, profile.betsLost);
+
+  // Best points across all shared leagues (for the stats row)
+  const bestLeaguePoints = profile.leagueMemberships.reduce(
+    (max, m) => Math.max(max, m.leaguePoints),
+    0
+  );
 
   // Show all leagues the target is in (public info — just names, no join codes)
   const leagues = profile.leagueMemberships;
@@ -79,13 +85,13 @@ export default async function PlayerProfilePage({
         </div>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — league-neutral metrics only; per-league points shown in Leagues section below */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Points', value: formatPoints(profile.totalPoints), icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Best League Pts', value: formatPoints(bestLeaguePoints), icon: Flame, color: 'text-primary', bg: 'bg-primary/10' },
           { label: 'Win Rate', value: `${winRate}%`, icon: Target, color: 'text-green-400', bg: 'bg-green-400/10' },
           { label: 'Bets Won', value: profile.betsWon, icon: Trophy, color: 'text-secondary', bg: 'bg-secondary/10' },
-          { label: 'Biggest Hit', value: profile.biggestHit > 0 ? `+${formatPoints(profile.biggestHit)}` : '—', icon: Flame, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+          { label: 'Leagues', value: leagues.length, icon: Users, color: 'text-accent', bg: 'bg-accent/10' },
         ].map((s) => (
           <div key={s.label} className="card flex items-center gap-3">
             <div className={`p-2.5 rounded-lg ${s.bg} flex-shrink-0`}>
