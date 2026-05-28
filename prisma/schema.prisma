@@ -23,6 +23,10 @@ model User {
   betsWon     Int @default(0)
   betsLost    Int @default(0)
   biggestHit  Int @default(0)
+
+  // Admin-managed overrides — persisted across stat recalculations
+  betsWonOffset      Int  @default(0) // added to derived betsWon (can be negative)
+  biggestHitOverride Int?             // if set, replaces derived biggestHit
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,6 +122,10 @@ model LeagueMember {
   leagueBetsWon    Int @default(0)
   leagueBetsLost   Int @default(0)
   leagueBiggestHit Int @default(0)
+
+  // Admin-managed overrides — persisted across stat recalculations
+  leagueBetsWonOffset      Int  @default(0)
+  leagueBiggestHitOverride Int?
 
   @@unique([leagueId, userId])
   @@index([userId])

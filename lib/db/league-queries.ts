@@ -214,7 +214,7 @@ export async function updateLeagueMemberStats(userId: string, leagueId?: string)
 
   await Promise.all(
     memberships.map(async (membership) => {
-      // Fetch bets and manual adjustments for this specific league in parallel
+      // Fetch bets, manual adjustments, and admin overrides for this league in parallel
       const [bets, adjustments] = await Promise.all([
         prisma.bet.findMany({ where: { userId, leagueId: membership.leagueId } }),
         prisma.pointAdjustment.findMany({ where: { userId, leagueId: membership.leagueId } }),
@@ -225,11 +225,13 @@ export async function updateLeagueMemberStats(userId: string, leagueId?: string)
         .reduce((sum, b) => sum + (b.pointsAwarded ?? 0), 0);
       const adjustmentPoints = adjustments.reduce((sum, a) => sum + a.amount, 0);
 
-      const leaguePoints    = betPoints + adjustmentPoints;
-      const leagueBetsWon   = bets.filter((b) => b.status === 'WON').length;
-      const leagueBetsLost  = bets.filter((b) => b.status === 'LOST').length;
-      // biggestHit = largest single winning bet (manual adjustments excluded intentionally)
-      const leagueBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
+      const leaguePoints = betPoints + adjustmentPoints;
+      // leagueBetsWonOffset lets admins add/subtract from the derived win count
+      const leagueBetsWon = bets.filter((b) => b.status === 'WON').length + membership.leagueBetsWonOffset;
+      const leagueBetsLost = bets.filter((b) => b.status === 'LOST').length;
+      // leagueBiggestHitOverride replaces the derived value when set by an admin
+      const derivedBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
+      const leagueBiggestHit = membership.leagueBiggestHitOverride ?? derivedBiggestHit;
 
       await prisma.leagueMember.update({
         where: { id: membership.id },

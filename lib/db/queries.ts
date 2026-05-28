@@ -131,10 +131,15 @@ export async function deleteBet(betId: string) {
 
 // Update user stats after bet resolution or point adjustment.
 // totalPoints = sum of won bet points + all manual adjustments (never overwrite adjustments).
+// betsWon and biggestHit respect admin-set offsets/overrides so corrections survive recalculations.
 export async function updateUserStats(userId: string) {
-  const [bets, adjustments] = await Promise.all([
+  const [bets, adjustments, user] = await Promise.all([
     prisma.bet.findMany({ where: { userId } }),
     prisma.pointAdjustment.findMany({ where: { userId } }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { betsWonOffset: true, biggestHitOverride: true },
+    }),
   ]);
 
   const betPoints = bets
@@ -143,10 +148,12 @@ export async function updateUserStats(userId: string) {
   const adjustmentPoints = adjustments.reduce((sum, a) => sum + a.amount, 0);
 
   const totalPoints = betPoints + adjustmentPoints;
-  const betsWon = bets.filter((b) => b.status === "WON").length;
+  // betsWonOffset lets admins add/subtract from the derived win count
+  const betsWon = bets.filter((b) => b.status === "WON").length + user.betsWonOffset;
   const betsLost = bets.filter((b) => b.status === "LOST").length;
-  // biggestHit tracks the largest single winning bet — adjustments are excluded intentionally
-  const biggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
+  // biggestHitOverride replaces the derived value when set by an admin
+  const derivedBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
+  const biggestHit = user.biggestHitOverride ?? derivedBiggestHit;
 
   return prisma.user.update({
     where: { id: userId },

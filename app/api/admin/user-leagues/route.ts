@@ -19,7 +19,15 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(
-      memberships.map((m) => ({ id: m.league.id, name: m.league.name, leaguePoints: m.leaguePoints }))
+      memberships.map((m) => ({
+        id: m.league.id,
+        name: m.league.name,
+        leaguePoints: m.leaguePoints,
+        leagueBetsWon: m.leagueBetsWon,
+        leagueBiggestHit: m.leagueBiggestHit,
+        leagueBetsWonOffset: m.leagueBetsWonOffset,
+        leagueBiggestHitOverride: m.leagueBiggestHitOverride,
+      }))
     );
   } catch (error) {
     return handleError(error, 'User Leagues');
