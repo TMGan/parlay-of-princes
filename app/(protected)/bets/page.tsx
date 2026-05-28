@@ -2,10 +2,12 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth/session';
 import { getUserBetsForWeek, getUserLeagues } from '@/lib/db/queries';
+import { getActiveBonusBets, getUserClaimForBonusBet } from '@/lib/db/bonus-bet-queries';
 import { getWeekNumber } from '@/lib/utils/format';
 import { StructuredBetForm } from '@/components/betting/StructuredBetForm';
 import { ManualBetForm } from '@/components/betting/ManualBetForm';
 import { UserBetsList } from '@/components/betting/UserBetsList';
+import { InlineBonusPicks } from '@/components/betting/InlineBonusPicks';
 
 export default async function BetsPage({
   searchParams,
@@ -28,13 +30,35 @@ export default async function BetsPage({
   const leagueId = activeLeagueMembership.league.id;
   const currentWeek = getWeekNumber(new Date());
 
-  // Bets are now per-league
-  const userBets = await getUserBetsForWeek(user.id, currentWeek, leagueId);
+  // Fetch bets and active bonus picks in parallel
+  const [userBets, activeBonusBets] = await Promise.all([
+    getUserBetsForWeek(user.id, currentWeek, leagueId),
+    getActiveBonusBets(),
+  ]);
+
+  // Separate bet types
   const regularBets = userBets.filter((bet) => !bet.isKingLock && !bet.isBonusBet);
   const kingLock = userBets.find((bet) => bet.isKingLock);
+  const bonusBets = userBets.filter((bet) => bet.isBonusBet);
 
+  // Regular slots: 3 regular + 1 king lock = 4 total (bonus picks are separate)
   const canPlaceRegularBet = regularBets.length < 3;
   const canPlaceKingLock = !kingLock;
+  const regularSlotsFilled = regularBets.length + (kingLock ? 1 : 0);
+
+  // Filter active bonus bets to only those the user hasn't claimed yet
+  const claimStatuses = await Promise.all(
+    activeBonusBets.map((b) => getUserClaimForBonusBet(user.id, b.id))
+  );
+  const unclaimedBonusPicks = activeBonusBets
+    .filter((_, i) => claimStatuses[i] === null)
+    .map((b) => ({
+      id: b.id,
+      name: b.name,
+      description: b.description,
+      sport: b.sport,
+      expiryDate: b.expiryDate.toISOString(),
+    }));
 
   return (
     <div className="space-y-6">
@@ -62,7 +86,10 @@ export default async function BetsPage({
           Place Your Bets
         </h1>
         <p className="text-gray-400 mt-2">
-          {activeLeagueMembership.league.name} · Week {currentWeek} · {userBets.length}/4 bets placed
+          {activeLeagueMembership.league.name} · Week {currentWeek} · {regularSlotsFilled}/4 bets placed
+          {bonusBets.length > 0 && (
+            <span className="text-secondary ml-2">· {bonusBets.length} bonus</span>
+          )}
         </p>
       </div>
 
@@ -97,14 +124,20 @@ export default async function BetsPage({
             canPlaceKingLock={canPlaceKingLock}
           />
 
-          <div className="pt-2 border-t border-gray-800">
-            <Link
-              href="/bonus-bets"
-              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-full border border-secondary/40 text-sm text-secondary hover:bg-secondary/10 transition-all font-medium"
-            >
-              ⭐ View Bonus Pick
-            </Link>
-          </div>
+          {/* Inline bonus picks — only rendered when there are unclaimed active picks */}
+          {unclaimedBonusPicks.length > 0 && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-800" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-background-light text-gray-400">BONUS</span>
+                </div>
+              </div>
+              <InlineBonusPicks picks={unclaimedBonusPicks} leagueId={leagueId} />
+            </>
+          )}
         </div>
 
         {/* Current Week Bets */}

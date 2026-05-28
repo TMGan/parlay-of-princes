@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
 import { createBet, getUserLeagues } from '@/lib/db/queries';
 import { isLeagueMember } from '@/lib/db/league-queries';
-import { getActiveBonusBet, getUserBonusBetForWeek } from '@/lib/db/bonus-bet-queries';
+import { getUserClaimForBonusBet } from '@/lib/db/bonus-bet-queries';
+import { prisma } from '@/lib/db/client';
 import { getWeekNumber } from '@/lib/utils/format';
 import { handleError, handleValidationError } from '@/lib/security/error-handler';
 import { sanitizeString, validateOdds } from '@/lib/security/validation';
@@ -48,15 +49,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'You are not a member of this league' }, { status: 403 });
     }
 
-    const bonusBet = await getActiveBonusBet();
-    if (!bonusBet || bonusBet.id !== bonusBetId) {
+    // Look up the specific bonus bet and confirm its window is still open
+    const now = new Date();
+    const bonusBet = await prisma.bonusBet.findFirst({
+      where: { id: bonusBetId, availableDate: { lte: now }, expiryDate: { gte: now } },
+    });
+    if (!bonusBet) {
       return NextResponse.json({ error: 'This bonus pick is no longer available' }, { status: 400 });
     }
 
     const currentWeek = getWeekNumber(new Date());
-    const existing = await getUserBonusBetForWeek(user.id, currentWeek);
+    const existing = await getUserClaimForBonusBet(user.id, bonusBetId);
     if (existing) {
-      return NextResponse.json({ error: 'You have already claimed a bonus pick this week' }, { status: 400 });
+      return NextResponse.json({ error: 'You have already claimed this bonus pick' }, { status: 400 });
     }
 
     const bet = await createBet({
