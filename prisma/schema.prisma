@@ -94,10 +94,11 @@ model League {
   maxMembers  Int            @default(20)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
-  members     LeagueMember[]
-  messages    Message[]
-  activities  LeagueActivity[]
-  bets        Bet[]            @relation("LeagueBets")
+  members          LeagueMember[]
+  messages         Message[]
+  activities       LeagueActivity[]
+  bets             Bet[]              @relation("LeagueBets")
+  pointAdjustments PointAdjustment[]  @relation("LeaguePointAdjustments")
 
   @@index([joinCode])
 }
@@ -183,10 +184,13 @@ model PointAdjustment {
   id          String   @id @default(uuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leagueId    String?
+  league      League?  @relation("LeaguePointAdjustments", fields: [leagueId], references: [id], onDelete: SetNull)
   adjustedBy  String
   amount      Int
   reason      String
   createdAt   DateTime @default(now())
 
   @@index([userId])
+  @@index([leagueId])
 }

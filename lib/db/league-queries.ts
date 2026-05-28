@@ -214,16 +214,21 @@ export async function updateLeagueMemberStats(userId: string, leagueId?: string)
 
   await Promise.all(
     memberships.map(async (membership) => {
-      // Only count bets explicitly placed in this league
-      const bets = await prisma.bet.findMany({
-        where: { userId, leagueId: membership.leagueId },
-      });
+      // Fetch bets and manual adjustments for this specific league in parallel
+      const [bets, adjustments] = await Promise.all([
+        prisma.bet.findMany({ where: { userId, leagueId: membership.leagueId } }),
+        prisma.pointAdjustment.findMany({ where: { userId, leagueId: membership.leagueId } }),
+      ]);
 
-      const leaguePoints = bets
+      const betPoints = bets
         .filter((b) => b.status === 'WON')
         .reduce((sum, b) => sum + (b.pointsAwarded ?? 0), 0);
-      const leagueBetsWon = bets.filter((b) => b.status === 'WON').length;
-      const leagueBetsLost = bets.filter((b) => b.status === 'LOST').length;
+      const adjustmentPoints = adjustments.reduce((sum, a) => sum + a.amount, 0);
+
+      const leaguePoints    = betPoints + adjustmentPoints;
+      const leagueBetsWon   = bets.filter((b) => b.status === 'WON').length;
+      const leagueBetsLost  = bets.filter((b) => b.status === 'LOST').length;
+      // biggestHit = largest single winning bet (manual adjustments excluded intentionally)
       const leagueBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
 
       await prisma.leagueMember.update({

@@ -1,5 +1,6 @@
 import { BetStatus, Role } from "@prisma/client";
 import { prisma } from "./client";
+import { updateLeagueMemberStats } from "./league-queries";
 
 function calculatePointsAwarded(oddsLocked: number, isKingLock: boolean) {
   const basePoints = Math.max(0, oddsLocked);
@@ -128,28 +129,28 @@ export async function deleteBet(betId: string) {
   });
 }
 
-// Update user stats after bet resolution
+// Update user stats after bet resolution or point adjustment.
+// totalPoints = sum of won bet points + all manual adjustments (never overwrite adjustments).
 export async function updateUserStats(userId: string) {
-  const bets = await prisma.bet.findMany({
-    where: { userId }
-  });
+  const [bets, adjustments] = await Promise.all([
+    prisma.bet.findMany({ where: { userId } }),
+    prisma.pointAdjustment.findMany({ where: { userId } }),
+  ]);
 
-  const totalPoints = bets
+  const betPoints = bets
     .filter((b) => b.status === "WON")
     .reduce((sum, b) => sum + (b.pointsAwarded ?? 0), 0);
+  const adjustmentPoints = adjustments.reduce((sum, a) => sum + a.amount, 0);
 
+  const totalPoints = betPoints + adjustmentPoints;
   const betsWon = bets.filter((b) => b.status === "WON").length;
   const betsLost = bets.filter((b) => b.status === "LOST").length;
-  const biggestHit = Math.max(...bets.map((b) => b.pointsAwarded ?? 0), 0);
+  // biggestHit tracks the largest single winning bet — adjustments are excluded intentionally
+  const biggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
 
   return prisma.user.update({
     where: { id: userId },
-    data: {
-      totalPoints,
-      betsWon,
-      betsLost,
-      biggestHit
-    }
+    data: { totalPoints, betsWon, betsLost, biggestHit },
   });
 }
 
@@ -284,30 +285,24 @@ export async function getUserWithDetails(userId: string) {
   });
 }
 
-// Adjust user points
+// Adjust user points for a specific league.
+// Creates the adjustment record then recalculates stats so the total is always
+// derived from the full history — manual adjustments are never lost on the next resolution.
 export async function adjustUserPoints(
   userId: string,
   amount: number,
   reason: string,
-  adjustedBy: string
+  adjustedBy: string,
+  leagueId: string
 ) {
-  return await prisma.$transaction([
-    prisma.user.update({
-      where: { id: userId },
-      data: {
-        totalPoints: {
-          increment: amount
-        }
-      }
-    }),
-    prisma.pointAdjustment.create({
-      data: {
-        userId,
-        adjustedBy,
-        amount,
-        reason
-      }
-    })
+  await prisma.pointAdjustment.create({
+    data: { userId, adjustedBy, amount, reason, leagueId },
+  });
+
+  // Recalculate both global and league-specific stats in parallel
+  await Promise.all([
+    updateUserStats(userId),
+    updateLeagueMemberStats(userId, leagueId),
   ]);
 }
 
