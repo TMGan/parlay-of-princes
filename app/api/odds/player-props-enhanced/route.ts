@@ -52,20 +52,53 @@ interface PlayerProp {
   bookmaker: string;
 }
 
+/** Human-readable labels for each market key. */
+const MARKET_LABELS: Record<string, string> = {
+  player_goals: 'Goals',
+  player_assists: 'Assists',
+  player_points: 'Points',
+  player_shots_on_goal: 'Shots on Goal',
+  player_pass_tds: 'Pass TDs',
+  player_pass_yds: 'Pass Yards',
+  player_rush_yds: 'Rush Yards',
+  player_receptions: 'Receptions',
+  player_reception_yds: 'Rec. Yards',
+  player_hits: 'Hits',
+  player_total_bases: 'Total Bases',
+  player_rbis: 'RBIs',
+  player_runs_scored: 'Runs Scored',
+  player_strikeouts: 'Strikeouts',
+  player_home_runs: 'Home Runs',
+  player_rebounds: 'Rebounds',
+  player_blocks: 'Blocks',
+  player_steals: 'Steals',
+  player_threes: '3-Pointers',
+};
+
+function marketLabel(key: string): string {
+  return MARKET_LABELS[key] ?? key.replace(/^player_/, '').replace(/_/g, ' ');
+}
+
 function extractProps(bookmaker: Bookmaker): PlayerProp[] {
   const props: PlayerProp[] = [];
   bookmaker.markets?.forEach((market) => {
+    const statName = marketLabel(market.key);
     market.outcomes?.forEach((outcome) => {
       if (outcome.price >= 100) {
+        const playerName = outcome.description ?? outcome.name;
+        const propType = outcome.name; // "Over" | "Under"
+        const linePart = outcome.point != null ? ` ${outcome.point}` : '';
+        // e.g. "Mark Stone Over 0.5 Goals"
+        const description = `${playerName} ${propType}${linePart} ${statName}`;
         props.push({
-          id: `${market.key}_${outcome.description ?? outcome.name}_${outcome.name}_${outcome.point ?? 'nopoint'}`.replace(/\s+/g, '_'),
+          id: `${market.key}_${playerName}_${propType}_${outcome.point ?? 'nopoint'}`.replace(/\s+/g, '_'),
           marketKey: market.key,
-          marketName: market.key.replace(/_/g, ' ').toUpperCase(),
-          playerName: outcome.description ?? outcome.name,
-          propType: outcome.name,
+          marketName: statName,
+          playerName,
+          propType,
           line: outcome.point ?? null,
           odds: outcome.price,
-          description: `${outcome.description ?? outcome.name} ${outcome.name} ${outcome.point ?? ''}`.trim(),
+          description,
           bookmaker: bookmaker.title,
         });
       }
