@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { formatOdds } from '@/lib/utils/format';
+import { formatOdds, formatDateTimeET } from '@/lib/utils/format';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { PlaceBetFromOdds } from './PlaceBetFromOdds';
 
@@ -213,7 +213,7 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
               {sportLabel}
             </span>
             <span className="text-sm text-gray-400">
-              {startTime.toLocaleDateString()} • {startTime.toLocaleTimeString()}
+              {formatDateTimeET(startTime)}
             </span>
           </div>
           <h3 className="text-xl font-bold">{awayTeam} @ {homeTeam}</h3>

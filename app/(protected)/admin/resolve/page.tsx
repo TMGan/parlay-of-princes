@@ -4,7 +4,7 @@ import { BetResolutionForm } from '@/components/admin/BetResolutionForm';
 import { BulkResolvePanel } from '@/components/admin/BulkResolvePanel';
 import { WeekSelector } from '@/components/admin/WeekSelector';
 import { ResolveUserFilter } from '@/components/admin/ResolveUserFilter';
-import { formatOdds, getWeekNumber } from '@/lib/utils/format';
+import { formatOdds, getWeekNumber, formatDateTimeET } from '@/lib/utils/format';
 
 export default async function AdminResolvePage({
   searchParams,
@@ -98,7 +98,7 @@ export default async function AdminResolvePage({
                     <h3 className="font-semibold mb-1">{bet.description}</h3>
                     <p className="text-sm text-gray-400">
                       @{bet.user.username} · {formatOdds(bet.oddsLocked)} ·{' '}
-                      {new Date(bet.gameStartTime).toLocaleString()}
+                      {formatDateTimeET(bet.gameStartTime)}
                     </p>
                   </div>
                   <BetResolutionForm betId={bet.id} />

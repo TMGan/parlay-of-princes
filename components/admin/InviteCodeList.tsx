@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle, XCircle } from "lucide-react";
+import { formatDateET } from '@/lib/utils/format';
 
 interface InviteCode {
   id: string;
@@ -42,7 +43,7 @@ export function InviteCodeList({ codes }: { codes: InviteCode[] }) {
               </td>
               <td className="px-4 py-3 text-gray-400">{code.usedByUser?.username || "—"}</td>
               <td className="px-4 py-3 text-gray-400 text-sm">
-                {new Date(code.createdAt).toLocaleDateString()}
+                {formatDateET(code.createdAt)}
               </td>
             </tr>
           ))}

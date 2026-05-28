@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
-import { formatOdds } from "@/lib/utils/format"
+import { formatOdds, formatDateTimeET } from "@/lib/utils/format"
 
 interface PlaceBetFromOddsProps {
   userId: string
@@ -86,7 +86,7 @@ export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onCl
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Game Time</span>
-              <span className="font-semibold text-sm">{gameStartTime.toLocaleString()}</span>
+              <span className="font-semibold text-sm">{formatDateTimeET(gameStartTime)}</span>
             </div>
           </div>
 

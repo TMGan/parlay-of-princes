@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserById, getUserBetsForWeek, getUserLeagues } from "@/lib/db/queries";
-import { getWeekNumber } from "@/lib/utils/format";
-import { formatPoints, formatOdds } from "@/lib/utils/format";
+import { getWeekNumber, formatPoints, formatOdds, formatDateET } from "@/lib/utils/format";
 import Link from "next/link";
 import { TrendingUp, Trophy, Target, Flame } from "lucide-react";
 
@@ -117,7 +116,7 @@ export default async function DashboardPage() {
                   </div>
                   <p className="mt-2 font-medium">{bet.description}</p>
                   <p className="text-sm text-gray-400 mt-1">
-                    {formatOdds(bet.oddsLocked)} • {new Date(bet.gameStartTime).toLocaleDateString()}
+                    {formatOdds(bet.oddsLocked)} • {formatDateET(bet.gameStartTime)}
                   </p>
                 </div>
                 <div className="text-right">

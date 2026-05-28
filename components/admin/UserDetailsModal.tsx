@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatPoints } from '@/lib/utils/format';
+import { formatPoints, formatDateET } from '@/lib/utils/format';
 import { Loader2 } from 'lucide-react';
 
 interface User {
@@ -95,7 +95,7 @@ export function UserDetailsModal({ user, onClose }: { user: User; onClose: () =>
                         </div>
                         <p className="text-sm">{bet.description}</p>
                         <p className="text-xs text-gray-400 mt-1">
-                          {new Date(bet.gameStartTime).toLocaleDateString()}
+                          {formatDateET(bet.gameStartTime)}
                         </p>
                       </div>
                       <div className="text-right">

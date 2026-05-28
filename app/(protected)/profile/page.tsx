@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserById, getAllUserBets } from "@/lib/db/queries";
-import { formatPoints } from "@/lib/utils/format";
+import { formatPoints, formatDateET } from "@/lib/utils/format";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { BetHistory } from "@/components/profile/BetHistory";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
@@ -38,7 +38,7 @@ export default async function ProfilePage() {
           <h1 className="text-3xl font-bold">{user.username}</h1>
           <p className="text-gray-400 text-sm mt-1">{user.email}</p>
           <p className="text-gray-500 text-xs mt-0.5">
-            {user.role === 'ADMIN' ? '👑 Admin' : 'Member'} · Joined {new Date(user.createdAt).toLocaleDateString()}
+            {user.role === 'ADMIN' ? '👑 Admin' : 'Member'} · Joined {formatDateET(user.createdAt)}
           </p>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default async function ProfilePage() {
               { label: 'Username', value: `@${user.username}` },
               { label: 'Email', value: user.email },
               { label: 'Role', value: user.role === 'ADMIN' ? '👑 Admin' : 'Member' },
-              { label: 'Member since', value: new Date(user.createdAt).toLocaleDateString() },
+              { label: 'Member since', value: formatDateET(user.createdAt) },
               { label: 'Total bets', value: allBets.length },
               { label: 'Bets lost', value: user.betsLost },
             ].map(({ label, value }) => (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Crown, Loader2 } from 'lucide-react';
+import { formatDateTimeET } from '@/lib/utils/format';
 
 type BonusBetStatus = 'PENDING' | 'WON' | 'LOST' | 'VOIDED';
 
@@ -87,7 +88,7 @@ export function BonusBetCard() {
       </div>
 
       <p className="text-xs text-gray-500">
-        Game: {new Date(bonusBet.parameters.gameStartTime).toLocaleString()}
+        Game: {formatDateTimeET(bonusBet.parameters.gameStartTime)}
       </p>
 
       {error && <p className="text-sm text-accent">{error}</p>}

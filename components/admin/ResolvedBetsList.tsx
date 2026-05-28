@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatOdds } from '@/lib/utils/format';
+import { formatOdds, formatDateTimeET } from '@/lib/utils/format';
 
 export interface ResolvedBet {
   id: string;
@@ -79,7 +79,7 @@ export function ResolvedBetsList({ bets }: { bets: ResolvedBet[] }) {
               <p className="text-sm">{bet.description}</p>
               <p className="text-xs text-gray-400 mt-1">
                 {bet.user.username} • {formatOdds(bet.oddsAmerican)} •{' '}
-                {new Date(bet.gameStartTime).toLocaleString()}
+                {formatDateTimeET(bet.gameStartTime)}
               </p>
             </div>
             <div className="flex flex-col items-end space-y-2">

@@ -2,6 +2,52 @@ export type OddsFormat = "american" | "decimal";
 
 const DEFAULT_LOCALE = "en-US";
 
+// ─── Eastern Time helpers ────────────────────────────────────────────────────
+// All user-facing dates and times in the app are displayed in ET so that
+// everyone sees the same clock regardless of where they are.
+const ET = 'America/New_York';
+
+/**
+ * Format a date-only string in ET, e.g. "May 28, 2026".
+ * Pass custom Intl options to adjust the fields shown.
+ */
+export function formatDateET(
+  dateInput: Date | string | number,
+  options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
+): string {
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return 'Invalid date';
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, { ...options, timeZone: ET }).format(date);
+}
+
+/**
+ * Format a time-only string in ET, e.g. "8:00 PM".
+ */
+export function formatTimeET(dateInput: Date | string | number): string {
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return 'Invalid time';
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: ET,
+  }).format(date);
+}
+
+/**
+ * Format a combined date-time string in ET, e.g. "May 28, 8:00 PM".
+ */
+export function formatDateTimeET(dateInput: Date | string | number): string {
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return 'Invalid date';
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: ET,
+  }).format(date);
+}
+
 export function formatOdds(value: number, format: OddsFormat = "american"): string {
   if (!Number.isFinite(value)) {
     return "N/A";

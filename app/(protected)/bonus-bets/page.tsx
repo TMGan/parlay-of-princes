@@ -1,7 +1,7 @@
 import { requireAuth } from '@/lib/auth/session';
 import { getActiveBonusBet, getAllBonusBets, getUserBonusBetForWeek } from '@/lib/db/bonus-bet-queries';
 import { getUserLeagues } from '@/lib/db/league-queries';
-import { getWeekNumber } from '@/lib/utils/format';
+import { getWeekNumber, formatDateET, formatTimeET } from '@/lib/utils/format';
 import { BonusBetClaimButton } from '@/components/betting/BonusBetClaimButton';
 import { Crown, Clock, Zap, CalendarDays } from 'lucide-react';
 
@@ -79,10 +79,8 @@ export default async function BonusBetsPage() {
           <div className="flex flex-wrap gap-4 text-sm text-gray-400">
             <div className="flex items-center gap-1.5">
               <CalendarDays size={14} className="text-gray-500" />
-              Open until: {new Date(activePick.expiryDate).toLocaleDateString('en-US', {
-                weekday: 'short', month: 'short', day: 'numeric',
-              })}{' '}
-              @ {new Date(activePick.expiryDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              Open until: {formatDateET(activePick.expiryDate, { weekday: 'short', month: 'short', day: 'numeric' })}{' '}
+              @ {formatTimeET(activePick.expiryDate)}
             </div>
             {timeLeft !== null && !claimed && (
               <div className={`flex items-center gap-1.5 ${timeLeft <= 2 ? 'text-amber-400' : ''}`}>
@@ -131,7 +129,7 @@ export default async function BonusBetsPage() {
                   <p className="text-xs text-gray-400 mt-0.5 truncate">{pick.description}</p>
                 </div>
                 <p className="text-xs text-gray-500 shrink-0">
-                  {new Date(pick.availableDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {formatDateET(pick.availableDate, { month: 'short', day: 'numeric' })}
                 </p>
               </div>
             ))}

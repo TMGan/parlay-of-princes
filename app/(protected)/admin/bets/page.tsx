@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { BetResolutionForm } from "@/components/admin/BetResolutionForm";
 import { HistoricalBetForm } from "@/components/admin/HistoricalBetForm";
-import { formatOdds, getWeekNumber } from "@/lib/utils/format";
+import { formatOdds, getWeekNumber, formatDateTimeET } from "@/lib/utils/format";
 import { getAllUsersForAdmin } from "@/lib/db/queries";
 import { ResolvedBetsList, type ResolvedBet } from "@/components/admin/ResolvedBetsList";
 
@@ -98,7 +98,7 @@ export default async function AdminBetsPage() {
                   <h3 className="font-semibold mb-1">{bet.description}</h3>
                   <p className="text-sm text-gray-400">
                     {bet.user.username} • {formatOdds(bet.oddsLocked)} •{" "}
-                    {new Date(bet.gameStartTime).toLocaleString()}
+                    {formatDateTimeET(bet.gameStartTime)}
                   </p>
                 </div>
                 <BetResolutionForm betId={bet.id} />

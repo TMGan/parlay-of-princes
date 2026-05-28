@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2, Pencil, X, Loader2, Check } from 'lucide-react';
 import type { ParsedBonusBet } from '@/lib/db/bonus-bet-queries';
+import { formatDateET } from '@/lib/utils/format';
 
 interface Props {
   bonusBets: ParsedBonusBet[];
@@ -158,8 +159,8 @@ export function BonusBetList({ bonusBets }: Props) {
                 <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
                   <span className="font-medium text-gray-400">{bet.sport}</span>
                   <span>
-                    Available: {new Date(bet.availableDate).toLocaleDateString()} –{' '}
-                    {new Date(bet.expiryDate).toLocaleDateString()}
+                    Available: {formatDateET(bet.availableDate, { month: 'short', day: 'numeric' })} –{' '}
+                    {formatDateET(bet.expiryDate, { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
               </>

@@ -1,6 +1,6 @@
 import { requireAdmin } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/client';
-import { getWeekNumber, formatPoints } from '@/lib/utils/format';
+import { getWeekNumber, formatPoints, formatDateET } from '@/lib/utils/format';
 import { Users, Trophy, TrendingUp, Star, BarChart2, Zap, Crown } from 'lucide-react';
 
 export default async function AdminStatsPage() {
@@ -178,7 +178,7 @@ export default async function AdminStatsPage() {
                   <div className="text-right">
                     <p className="text-primary font-semibold">{formatPoints(u.totalPoints)} pts</p>
                     <p className="text-xs text-gray-500">
-                      {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {formatDateET(u.createdAt, { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
                 </div>

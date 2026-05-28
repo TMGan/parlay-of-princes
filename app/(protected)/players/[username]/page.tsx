@@ -3,7 +3,7 @@ import { requireAuth } from '@/lib/auth/session';
 import { getPublicProfile } from '@/lib/db/queries';
 import { Avatar } from '@/components/ui/Avatar';
 import { calculateBadges, getCurrentStreak, getHotSport } from '@/lib/utils/badges';
-import { formatPoints } from '@/lib/utils/format';
+import { formatPoints, formatDateET } from '@/lib/utils/format';
 import { Trophy, TrendingUp, Target, Flame, Zap, Star } from 'lucide-react';
 
 export default async function PlayerProfilePage({
@@ -46,10 +46,7 @@ export default async function PlayerProfilePage({
 
   const recentBets = resolvedBets.slice(0, 10);
 
-  const memberSince = new Date(profile.createdAt).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
+  const memberSince = formatDateET(profile.createdAt, { month: 'long', year: 'numeric' });
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

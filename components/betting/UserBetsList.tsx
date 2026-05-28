@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Pencil, Trophy } from 'lucide-react';
-import { formatOdds } from '@/lib/utils/format';
+import { formatOdds, formatDateTimeET } from '@/lib/utils/format';
 import { DeleteBetButton } from './DeleteBetButton';
 import { EditBetModal } from './EditBetModal';
 import { BetCountdown } from './BetCountdown';
@@ -78,7 +78,7 @@ export function UserBetsList({ bets }: { bets: Bet[] }) {
                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400">
                   <span>{formatOdds(bet.oddsLocked)}</span>
                   <span>•</span>
-                  <span>{new Date(bet.gameStartTime).toLocaleString()}</span>
+                  <span>{formatDateTimeET(bet.gameStartTime)}</span>
                   {bet.status === 'PENDING' && (
                     <BetCountdown gameStartTime={new Date(bet.gameStartTime)} />
                   )}

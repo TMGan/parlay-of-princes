@@ -31,6 +31,7 @@ interface PlayerProp {
 }
 
 import { API_SPORTS as SPORTS } from '@/lib/constants/sports';
+import { formatDateTimeET } from '@/lib/utils/format';
 
 export function StructuredBetForm(props: StructuredBetFormProps) {
   const { canPlaceRegularBet, canPlaceKingLock, leagueId } = props;
@@ -232,7 +233,7 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
                     {game.awayTeam} @ {game.homeTeam}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
-                    {new Date(game.commenceTime).toLocaleString()}
+                    {formatDateTimeET(game.commenceTime)}
                   </div>
                 </button>
               ))}
