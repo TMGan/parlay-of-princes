@@ -11,27 +11,46 @@ interface Props {
 }
 
 const TARGET_SIZE = 128; // px — resize to 128×128 before storing
+const MAX_BYTES = 300_000; // 300 KB — matches server-side limit
 
+/**
+ * Reads a File as a base64 data URL, then draws it to a 128×128 canvas
+ * (center-cropped) and returns the result as a JPEG data URL.
+ *
+ * Uses FileReader instead of URL.createObjectURL so this works reliably
+ * on iOS Safari, which has issues with blob URLs in Image elements.
+ */
 function resizeImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = TARGET_SIZE;
-      canvas.height = TARGET_SIZE;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas not supported'));
-      // Crop to square from center
-      const side = Math.min(img.width, img.height);
-      const sx = (img.width - side) / 2;
-      const sy = (img.height - side) / 2;
-      ctx.drawImage(img, sx, sy, side, side, 0, 0, TARGET_SIZE, TARGET_SIZE);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error('Could not read file'));
+
+    reader.onload = (readerEvent) => {
+      const dataUrl = readerEvent.target?.result;
+      if (typeof dataUrl !== 'string') return reject(new Error('FileReader returned unexpected result'));
+
+      const img = new window.Image();
+      img.onerror = () => reject(new Error('Could not decode image'));
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = TARGET_SIZE;
+        canvas.height = TARGET_SIZE;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas 2D context not available'));
+
+        // Center-crop to square, then scale to TARGET_SIZE
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, TARGET_SIZE, TARGET_SIZE);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = dataUrl;
     };
-    img.onerror = reject;
-    img.src = url;
+
+    reader.readAsDataURL(file);
   });
 }
 
@@ -51,6 +70,11 @@ export function AvatarUpload({ username, currentAvatarUrl }: Props) {
     setIsUploading(true);
     try {
       const dataUrl = await resizeImage(file);
+
+      if (dataUrl.length > MAX_BYTES) {
+        throw new Error('Image is too large even after resizing. Try a smaller photo.');
+      }
+
       setPreview(dataUrl);
 
       const res = await fetch('/api/user/avatar', {
@@ -58,8 +82,9 @@ export function AvatarUpload({ username, currentAvatarUrl }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ avatarDataUrl: dataUrl }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      const data = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
@@ -87,7 +112,7 @@ export function AvatarUpload({ username, currentAvatarUrl }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* Avatar preview with overlay */}
+      {/* Avatar preview with camera overlay on hover */}
       <div className="relative group">
         <Avatar username={username} imageUrl={preview} size="xl" />
         <button
@@ -104,7 +129,7 @@ export function AvatarUpload({ username, currentAvatarUrl }: Props) {
         </button>
       </div>
 
-      {/* Buttons */}
+      {/* Action buttons */}
       <div className="flex gap-2">
         <button
           type="button"
@@ -136,7 +161,7 @@ export function AvatarUpload({ username, currentAvatarUrl }: Props) {
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleFile(f); }}
       />
     </div>
   );
