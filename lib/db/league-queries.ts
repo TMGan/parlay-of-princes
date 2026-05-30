@@ -261,6 +261,7 @@ export async function getLeagueLeaderboard(leagueId: string): Promise<Leaderboar
       totalPoints: number | bigint;
       betsWon: number | bigint;
       betsLost: number | bigint;
+      biggestOdds: number | bigint;
     }>
   >`
     SELECT
@@ -268,9 +269,17 @@ export async function getLeagueLeaderboard(leagueId: string): Promise<Leaderboar
       u.username,
       u.email,
       lm.role,
-      lm."leaguePoints"  AS "totalPoints",
-      lm."leagueBetsWon" AS "betsWon",
-      lm."leagueBetsLost" AS "betsLost"
+      lm."leaguePoints"   AS "totalPoints",
+      lm."leagueBetsWon"  AS "betsWon",
+      lm."leagueBetsLost" AS "betsLost",
+      COALESCE(
+        (SELECT MAX(b."oddsLocked")
+         FROM "Bet" b
+         WHERE b."userId" = u.id
+           AND b."leagueId" = ${leagueId}
+           AND b.status = 'WON'),
+        0
+      ) AS "biggestOdds"
     FROM "User" u
     INNER JOIN "LeagueMember" lm ON u.id = lm."userId"
     WHERE lm."leagueId" = ${leagueId}
@@ -291,6 +300,7 @@ export async function getLeagueLeaderboard(leagueId: string): Promise<Leaderboar
       betsWon,
       betsLost,
       winRate: totalBets > 0 ? Math.round((betsWon / totalBets) * 100) : 0,
+      biggestOdds: Number(row.biggestOdds),
       role: row.role,
     };
   });

@@ -48,6 +48,8 @@ export interface LeaderboardEntry {
   betsWon: number;
   betsLost: number;
   winRate: number;
+  /** Highest American odds (+XXX) from any WON bet in this league. 0 = no wins yet. */
+  biggestOdds: number;
   role: 'MEMBER' | 'ADMIN';
 }
 
