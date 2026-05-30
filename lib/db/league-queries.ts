@@ -214,10 +214,17 @@ export async function updateLeagueMemberStats(userId: string, leagueId?: string)
 
   await Promise.all(
     memberships.map(async (membership) => {
-      // Fetch bets, manual adjustments, and admin overrides for this league in parallel
+      // Fetch bets, manual adjustments, and admin overrides for this league in parallel.
+      // Include adjustments with leagueId = null as legacy "global" adjustments so that
+      // records created before the leagueId column was added are not silently dropped.
       const [bets, adjustments] = await Promise.all([
         prisma.bet.findMany({ where: { userId, leagueId: membership.leagueId } }),
-        prisma.pointAdjustment.findMany({ where: { userId, leagueId: membership.leagueId } }),
+        prisma.pointAdjustment.findMany({
+          where: {
+            userId,
+            OR: [{ leagueId: membership.leagueId }, { leagueId: null }],
+          },
+        }),
       ]);
 
       const betPoints = bets
