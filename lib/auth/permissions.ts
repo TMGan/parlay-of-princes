@@ -13,17 +13,15 @@ export function canAdjustUserPoints(
   targetUserEmail: string,
   targetUserRole: string
 ): boolean {
-  if (isSuperAdmin(adminEmail)) {
-    return true;
-  }
+  // Super admin can adjust anyone
+  if (isSuperAdmin(adminEmail)) return true;
 
-  if (targetUserRole === 'ADMIN') {
-    return false;
-  }
+  // Admins can adjust their own stats
+  if (adminEmail === targetUserEmail) return true;
 
-  if (targetUserEmail === SUPER_ADMIN_EMAIL) {
-    return false;
-  }
+  // Admins cannot adjust other admins or the super admin
+  if (targetUserRole === 'ADMIN') return false;
+  if (targetUserEmail === SUPER_ADMIN_EMAIL) return false;
 
   return true;
 }
