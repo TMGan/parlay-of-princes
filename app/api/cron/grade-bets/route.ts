@@ -108,15 +108,20 @@ async function gradeWithClaude(
       messages: [
         {
           role: 'user',
-          content: `You are a sports bet grader. Grade this bet as WON, LOST, or VOIDED.
+          content: `You are a sports bet grader. Grade this bet as WON, LOST, VOIDED, or UNCERTAIN.
 
 Bet: "${description}"
 Sport: ${sport}
 Game date: ${gameDate}
 ${scoresContext ? `Scores/results context:\n${scoresContext}` : 'No scores context available.'}
 
-Reply with exactly one word: WON, LOST, or VOIDED.
-If you are not confident, reply VOIDED.`,
+Rules:
+- WON: you have clear evidence the bettor's pick was correct.
+- LOST: you have clear evidence the bettor's pick was incorrect.
+- VOIDED: the game/event was officially cancelled, postponed, or the bet was invalid. Only use this if you have evidence of cancellation.
+- UNCERTAIN: you do not have enough information to determine the outcome. Use this whenever you are not confident.
+
+Reply with exactly one word: WON, LOST, VOIDED, or UNCERTAIN.`,
         },
       ],
     });
