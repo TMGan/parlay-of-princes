@@ -65,13 +65,13 @@ export function UserManagementTable({ users, adminEmail, isSuperAdmin }: UserMan
   };
 
   const canManageUser = (user: User) => {
-    if (isSuperAdmin) {
-      return user.email !== adminEmail;
-    }
+    // Super admin can adjust points for everyone, including themselves.
+    // Role-change buttons are separately gated by canPromote/canDemote,
+    // so there's no risk of accidental self-demotion here.
+    if (isSuperAdmin) return true;
 
-    // Admins can always manage themselves
+    // Regular admins can manage themselves and non-admin users
     if (user.email === adminEmail) return true;
-
     return user.role !== 'ADMIN';
   };
 
