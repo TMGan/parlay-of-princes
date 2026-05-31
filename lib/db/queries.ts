@@ -166,7 +166,8 @@ export async function updateUserStats(userId: string) {
   const totalPoints = betPoints + adjustmentPoints;
   // betsWonOffset lets admins add/subtract from the derived win count
   const betsWon = bets.filter((b) => b.status === "WON").length + user.betsWonOffset;
-  const betsLost = bets.filter((b) => b.status === "LOST").length;
+  // A "loss" is any resolved pick that didn't win — LOST or VOIDED both count.
+  const betsLost = bets.filter((b) => b.status === "LOST" || b.status === "VOIDED").length;
   // biggestHitOverride replaces the derived value when set by an admin
   const derivedBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
   const biggestHit = user.biggestHitOverride ?? derivedBiggestHit;
@@ -276,7 +277,7 @@ export async function getAllUsersWithStats() {
 
   return users.map((user) => {
     const betsWon = user.bets.filter((bet) => bet.status === "WON").length;
-    const betsLost = user.bets.filter((bet) => bet.status === "LOST").length;
+    const betsLost = user.bets.filter((bet) => bet.status === "LOST" || bet.status === "VOIDED").length;
     const totalBets = betsWon + betsLost;
     const winRate = totalBets > 0 ? Math.round((betsWon / totalBets) * 100) : 0;
 

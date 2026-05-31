@@ -235,7 +235,8 @@ export async function updateLeagueMemberStats(userId: string, leagueId?: string)
       const leaguePoints = betPoints + adjustmentPoints;
       // leagueBetsWonOffset lets admins add/subtract from the derived win count
       const leagueBetsWon = bets.filter((b) => b.status === 'WON').length + membership.leagueBetsWonOffset;
-      const leagueBetsLost = bets.filter((b) => b.status === 'LOST').length;
+      // A "loss" is any resolved pick that didn't win — LOST or VOIDED both count.
+      const leagueBetsLost = bets.filter((b) => b.status === 'LOST' || b.status === 'VOIDED').length;
       // leagueBiggestHitOverride replaces the derived value when set by an admin
       const derivedBiggestHit = Math.max(0, ...bets.map((b) => b.pointsAwarded ?? 0));
       const leagueBiggestHit = membership.leagueBiggestHitOverride ?? derivedBiggestHit;
@@ -269,9 +270,18 @@ export async function getLeagueLeaderboard(leagueId: string): Promise<Leaderboar
       u.username,
       u.email,
       lm.role,
-      lm."leaguePoints"   AS "totalPoints",
-      lm."leagueBetsWon"  AS "betsWon",
-      lm."leagueBetsLost" AS "betsLost",
+      lm."leaguePoints"  AS "totalPoints",
+      lm."leagueBetsWon" AS "betsWon",
+      -- Compute losses live so historical data is always accurate.
+      -- A loss is any resolved pick that didn't win: LOST or VOIDED.
+      COALESCE(
+        (SELECT COUNT(*)
+         FROM "Bet" b
+         WHERE b."userId" = u.id
+           AND b."leagueId" = ${leagueId}
+           AND b.status IN ('LOST', 'VOIDED')),
+        0
+      ) AS "betsLost",
       COALESCE(
         (SELECT MAX(b."oddsLocked")
          FROM "Bet" b
