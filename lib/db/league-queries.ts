@@ -378,11 +378,27 @@ export async function getLeagueMemberBetsForWeek(leagueId: string, weekNumber: n
   });
   const memberIds = members.map((m) => m.userId);
 
-  return prisma.bet.findMany({
-    where: { userId: { in: memberIds }, weekNumber },
+  const bets = await prisma.bet.findMany({
+    where: { userId: { in: memberIds }, weekNumber, leagueId },
     include: { user: { select: { id: true, username: true } } },
     orderBy: [{ user: { username: 'asc' } }, { isKingLock: 'desc' }, { createdAt: 'asc' }],
   });
+
+  // Enrich bonus bets with their pick name so the league view can distinguish events
+  const bonusBetIds = [...new Set(bets.flatMap((b) => (b.bonusBetId ? [b.bonusBetId] : [])))];
+  let bonusBetNames: Record<string, string> = {};
+  if (bonusBetIds.length > 0) {
+    const bonusBets = await prisma.bonusBet.findMany({
+      where: { id: { in: bonusBetIds } },
+      select: { id: true, name: true },
+    });
+    bonusBetNames = Object.fromEntries(bonusBets.map((b) => [b.id, b.name]));
+  }
+
+  return bets.map((b) => ({
+    ...b,
+    bonusBetName: b.bonusBetId ? (bonusBetNames[b.bonusBetId] ?? null) : null,
+  }));
 }
 
 /**

@@ -38,14 +38,15 @@ export async function getActiveBonusBets(): Promise<ParsedBonusBet[]> {
 /**
  * Returns the user's claim for a specific bonus bet window, or null if not yet claimed.
  *
- * The claim is scoped to the bonus bet's current `availableDate` — this prevents a claim
- * from a previous window (when an admin edits the same bonus bet record with a new date
- * rather than creating a fresh one) from blocking the new window.
+ * The claim is scoped to the exact [availableDate, expiryDate] window of this bonus bet.
+ * This prevents a claim from a previous window (same bonus bet ID, different dates) from
+ * showing as a claim for the new window — even if the admin edited the record in-place
+ * rather than creating a fresh one.
  */
 export async function getUserClaimForBonusBet(userId: string, bonusBetId: string) {
   const bonusBet = await prisma.bonusBet.findUnique({
     where: { id: bonusBetId },
-    select: { availableDate: true },
+    select: { availableDate: true, expiryDate: true },
   });
   if (!bonusBet) return null;
 
@@ -54,8 +55,11 @@ export async function getUserClaimForBonusBet(userId: string, bonusBetId: string
       userId,
       isBonusBet: true,
       bonusBetId,
-      // Only count claims placed on or after this window opened
-      createdAt: { gte: bonusBet.availableDate },
+      // Claim must fall inside the current window — not from a prior window on the same ID
+      createdAt: {
+        gte: bonusBet.availableDate,
+        lte: bonusBet.expiryDate,
+      },
     },
   });
 }

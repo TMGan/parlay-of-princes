@@ -65,14 +65,30 @@ export async function getAllUserBets(userId: string) {
 }
 
 export async function getUserBetsForWeek(userId: string, weekNumber: number, leagueId?: string) {
-  return prisma.bet.findMany({
+  const bets = await prisma.bet.findMany({
     where: {
       userId,
       weekNumber,
       ...(leagueId ? { leagueId } : {}),
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: 'desc' },
   });
+
+  // Enrich bonus bets with their pick name so the UI can distinguish events
+  const bonusBetIds = [...new Set(bets.flatMap((b) => (b.bonusBetId ? [b.bonusBetId] : [])))];
+  let bonusBetNames: Record<string, string> = {};
+  if (bonusBetIds.length > 0) {
+    const bonusBets = await prisma.bonusBet.findMany({
+      where: { id: { in: bonusBetIds } },
+      select: { id: true, name: true },
+    });
+    bonusBetNames = Object.fromEntries(bonusBets.map((b) => [b.id, b.name]));
+  }
+
+  return bets.map((b) => ({
+    ...b,
+    bonusBetName: b.bonusBetId ? (bonusBetNames[b.bonusBetId] ?? null) : null,
+  }));
 }
 
 export async function createBet(data: {

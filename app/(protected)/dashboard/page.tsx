@@ -134,7 +134,7 @@ export default async function DashboardPage() {
                     )}
                     {bet.isBonusBet && (
                       <span className="text-sm font-semibold text-amber-400 px-2 py-1 bg-amber-400/10 rounded">
-                        ⭐ BONUS
+                        ⭐ {('bonusBetName' in bet && bet.bonusBetName) ? bet.bonusBetName : 'BONUS'}
                       </span>
                     )}
                   </div>

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
-import { getActiveBonusBet, getUserBonusBetForWeek } from '@/lib/db/bonus-bet-queries';
-import { getWeekNumber } from '@/lib/utils/format';
+import { getActiveBonusBet, getUserClaimForBonusBet } from '@/lib/db/bonus-bet-queries';
 import { handleError } from '@/lib/security/error-handler';
 
 export async function GET() {
@@ -11,8 +10,8 @@ export async function GET() {
 
     if (!bonusBet) return NextResponse.json(null);
 
-    const currentWeek = getWeekNumber(new Date());
-    const userClaim = await getUserBonusBetForWeek(user.id, currentWeek);
+    // Scope the claim check to this specific bonus pick's window — not any bonus bet this week.
+    const userClaim = await getUserClaimForBonusBet(user.id, bonusBet.id);
 
     return NextResponse.json({
       ...bonusBet,

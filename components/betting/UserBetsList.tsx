@@ -14,6 +14,7 @@ interface Bet {
   oddsLocked: number;
   isKingLock: boolean;
   isBonusBet: boolean;
+  bonusBetName?: string | null;
   status: string;
   gameStartTime: Date;
   pointsAwarded: number | null;
@@ -65,7 +66,7 @@ export function UserBetsList({ bets }: { bets: Bet[] }) {
                   )}
                   {bet.isBonusBet && (
                     <span className="text-xs font-semibold text-amber-400 px-2 py-1 bg-amber-400/10 rounded-full">
-                      ⭐ BONUS
+                      ⭐ {bet.bonusBetName ?? 'BONUS'}
                     </span>
                   )}
                   <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_STYLE[bet.status] ?? STATUS_STYLE.PENDING}`}>

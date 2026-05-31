@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/Avatar';
-import { Crown, Star } from 'lucide-react';
+import { Crown } from 'lucide-react';
 
 type Bet = {
   id: string;
@@ -10,6 +10,7 @@ type Bet = {
   status: string;
   isKingLock: boolean;
   isBonusBet: boolean;
+  bonusBetName?: string | null;
   gameStartTime: Date;
   user: { id: string; username: string };
 };
@@ -95,7 +96,14 @@ export function LeagueWeeklyPicks({ bets, currentUserId }: Props) {
                   {/* Badges + odds */}
                   <div className="flex items-center gap-1 shrink-0">
                     {bet.isKingLock && <span title="King Lock"><Crown size={13} className="text-primary" /></span>}
-                    {bet.isBonusBet && <span title="Bonus Pick"><Star size={13} className="text-amber-400" /></span>}
+                    {bet.isBonusBet && (
+                      <span
+                        title={bet.bonusBetName ? `Bonus Pick: ${bet.bonusBetName}` : 'Bonus Pick'}
+                        className="text-xs text-amber-400 font-semibold"
+                      >
+                        ⭐{bet.bonusBetName ? ` ${bet.bonusBetName}` : ''}
+                      </span>
+                    )}
                     <span className="text-xs text-gray-400 font-mono">+{bet.oddsLocked}</span>
                   </div>
                 </div>

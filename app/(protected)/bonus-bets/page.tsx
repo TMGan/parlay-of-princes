@@ -1,22 +1,25 @@
 import { requireAuth } from '@/lib/auth/session';
-import { getActiveBonusBet, getAllBonusBets, getUserBonusBetForWeek } from '@/lib/db/bonus-bet-queries';
+import { getActiveBonusBet, getAllBonusBets, getUserClaimForBonusBet } from '@/lib/db/bonus-bet-queries';
 import { getUserLeagues } from '@/lib/db/league-queries';
-import { getWeekNumber, formatDateET, formatTimeET } from '@/lib/utils/format';
+import { formatDateET, formatTimeET } from '@/lib/utils/format';
 import { BonusBetClaimButton } from '@/components/betting/BonusBetClaimButton';
 import { Crown, Clock, Zap, CalendarDays } from 'lucide-react';
 
 export default async function BonusBetsPage() {
   const user = await requireAuth();
-  const currentWeek = getWeekNumber(new Date());
 
-  const [activePick, allPicks, userLeagues, userClaim] = await Promise.all([
+  const [activePick, allPicks, userLeagues] = await Promise.all([
     getActiveBonusBet(),
     getAllBonusBets(),
     getUserLeagues(user.id),
-    getActiveBonusBet().then((pick) =>
-      pick ? getUserBonusBetForWeek(user.id, currentWeek) : null
-    ),
   ]);
+
+  // Scope the claim check to THIS specific bonus pick — not any bonus bet this week.
+  // Without this, a prior pick's claim (same week, different bonusBetId) would
+  // incorrectly mark the new pick as already claimed.
+  const userClaim = activePick
+    ? await getUserClaimForBonusBet(user.id, activePick.id)
+    : null;
 
   // Use first league as default context for bonus claim
   const defaultLeagueId = userLeagues[0]?.league.id;

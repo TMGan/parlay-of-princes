@@ -14,11 +14,20 @@ const SPORT_OPTIONS = [
   'MLB', 'NFL', 'NBA', 'NHL', 'MLS', 'Golf', 'UFC / MMA', 'Tennis', 'College Football', 'College Basketball', 'Other',
 ];
 
+/** Extract the date portion in the admin's local timezone (YYYY-MM-DD). */
 function toLocalDate(iso: Date | string): string {
-  return new Date(iso).toISOString().slice(0, 10);
+  const d = new Date(iso);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
+/** Extract the time portion in the admin's local timezone (HH:MM). */
 function toLocalTime(iso: Date | string): string {
-  return new Date(iso).toTimeString().slice(0, 5);
+  const d = new Date(iso);
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }
 
 export function BonusBetList({ bonusBets }: Props) {

@@ -99,8 +99,9 @@ export function formatWeekRange(weekNumber: number, dateInput: Date | string | n
   }).format(date);
   const year = Number(etYearStr);
 
-  const jan1 = new Date(year, 0, 1);
-  const jan1Day = jan1.getDay(); // 0=Sun … 6=Sat
+  // Use UTC so DST never skews the day-of-week for Jan 1.
+  const jan1 = new Date(Date.UTC(year, 0, 1));
+  const jan1Day = (jan1.getUTCDay() + 6) % 7;
 
   // First day of this week (days offset from Jan 1)
   const startOffset = Math.max(0, (weekNumber - 1) * 7 - jan1Day);
@@ -130,9 +131,13 @@ export function getWeekNumber(dateInput: Date | string | number): number {
   }).format(date); // "YYYY-MM-DD"
 
   const [year, month, day] = etString.split('-').map(Number) as [number, number, number];
-  const etDate = new Date(year, month - 1, day); // local midnight, no timezone shift
 
-  const startOfYear = new Date(etDate.getFullYear(), 0, 1);
-  const pastDaysOfYear = Math.floor((etDate.getTime() - startOfYear.getTime()) / 86400000);
-  return Math.min(52, Math.max(1, Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7)));
+  // Use UTC dates so DST never affects the millisecond arithmetic.
+  // The ET year/month/day are already resolved above; we just need timezone-clean offsets.
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  const utcJan1 = new Date(Date.UTC(year, 0, 1));
+  const pastDaysOfYear = Math.floor((utcDate.getTime() - utcJan1.getTime()) / 86400000);
+  // (getUTCDay() + 6) % 7 converts Sun=0…Sat=6 → Mon=0…Sun=6, anchoring weeks on Monday.
+  const monOffset = (utcJan1.getUTCDay() + 6) % 7;
+  return Math.min(52, Math.max(1, Math.ceil((pastDaysOfYear + monOffset + 1) / 7)));
 }

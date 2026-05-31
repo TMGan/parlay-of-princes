@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Camera, X } from 'lucide-react';
 
 type BetStatus = 'PENDING' | 'WON' | 'LOST' | 'VOIDED';
 
@@ -30,15 +30,62 @@ interface Props {
 
 export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, leagueId }: Props) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<'idle' | 'form' | 'done'>('idle');
   const [isClaiming, setIsClaiming] = useState(false);
   const [error, setError] = useState('');
+
+  // Screenshot state
+  const [isParsingSlip, setIsParsingSlip] = useState(false);
+  const [slipError, setSlipError] = useState('');
+  const [slipSuccess, setSlipSuccess] = useState(false);
 
   // User's pick fields
   const [description, setDescription] = useState('');
   const [odds, setOdds] = useState('');
   const [gameDate, setGameDate] = useState('');
   const [gameTime, setGameTime] = useState('20:00');
+
+  const handleScreenshotUpload = async (file: File) => {
+    setIsParsingSlip(true);
+    setSlipError('');
+    setSlipSuccess(false);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1] ?? result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/ai/parse-bet-slip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType: file.type }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to parse slip');
+
+      // Auto-fill from parsed slip. Sport is already fixed by the bonus pick, so skip it.
+      if (data.description) setDescription(data.description);
+      if (data.oddsAmerican) setOdds(String(data.oddsAmerican));
+      if (typeof data.gameStartTime === 'string' && data.gameStartTime.length >= 16) {
+        setGameDate(data.gameStartTime.slice(0, 10));
+        setGameTime(data.gameStartTime.slice(11, 16));
+      }
+      setSlipSuccess(true);
+      if (step !== 'form') setStep('form');
+    } catch (err) {
+      setSlipError(err instanceof Error ? err.message : 'Could not read slip');
+    } finally {
+      setIsParsingSlip(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleClaim = async () => {
     if (!description.trim() || !odds || !gameDate) {
@@ -126,6 +173,45 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
       <div className="flex items-center justify-between">
         <p className="font-semibold text-sm text-primary">Your Pick ({sport})</p>
         <button onClick={() => { setStep('idle'); setError(''); }} className="text-xs text-gray-400 hover:text-white">✕ Cancel</button>
+      </div>
+
+      {/* Screenshot upload */}
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleScreenshotUpload(file);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isParsingSlip}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-dashed border-primary/40 text-sm text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+        >
+          {isParsingSlip ? (
+            <><Loader2 size={15} className="animate-spin" /> Reading slip…</>
+          ) : (
+            <><Camera size={15} /> Upload Bet Slip Screenshot</>
+          )}
+        </button>
+        {slipError && (
+          <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+            <X size={12} /> {slipError}
+          </p>
+        )}
+        {slipSuccess && !slipError && (
+          <p className="text-xs text-green-400 mt-1 text-center">
+            ✓ Slip read — review the fields below and adjust if needed
+          </p>
+        )}
+        {!slipError && !slipSuccess && !isParsingSlip && (
+          <p className="text-xs text-gray-500 mt-1 text-center">AI will auto-fill the fields below</p>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
