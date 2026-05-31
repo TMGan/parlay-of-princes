@@ -91,7 +91,20 @@ export function getWeekNumber(dateInput: Date | string | number): number {
     return 0;
   }
 
-  const startOfYear = new Date(date.getFullYear(), 0, 1);
-  const pastDaysOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000);
+  // Convert to Eastern Time before computing week number.
+  // Vercel runs in UTC — without this, late-night EST times (e.g. 11 PM EST = 4 AM UTC next day)
+  // would roll over to the next day/week prematurely.
+  const etString = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date); // "YYYY-MM-DD"
+
+  const [year, month, day] = etString.split('-').map(Number) as [number, number, number];
+  const etDate = new Date(year, month - 1, day); // local midnight, no timezone shift
+
+  const startOfYear = new Date(etDate.getFullYear(), 0, 1);
+  const pastDaysOfYear = Math.floor((etDate.getTime() - startOfYear.getTime()) / 86400000);
   return Math.min(52, Math.max(1, Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7)));
 }
