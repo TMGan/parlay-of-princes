@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getUserBetsForWeek, getUserLeagues } from "@/lib/db/queries";
-import { getWeekNumber, formatPoints, formatOdds, formatDateET } from "@/lib/utils/format";
+import { getWeekNumber, formatWeekRange, formatPoints, formatOdds, formatDateET } from "@/lib/utils/format";
 import Link from "next/link";
 import { TrendingUp, Trophy, Target, Flame } from "lucide-react";
 
@@ -16,7 +16,9 @@ export default async function DashboardPage() {
 
   if (userLeagues.length === 0) redirect('/leagues/onboarding');
 
-  const currentWeek = getWeekNumber(new Date());
+  const now = new Date();
+  const currentWeek = getWeekNumber(now);
+  const weekRange = formatWeekRange(currentWeek, now);
 
   // Stats come from the user's most recently joined league
   // (first in list — getUserLeagues orders by joinedAt desc)
@@ -66,7 +68,7 @@ export default async function DashboardPage() {
           Welcome back, {currentUser.name ?? 'Player'}!
         </h1>
         <p className="text-gray-400 mt-2">
-          Week {currentWeek} of 52 · {primaryMembership.league.name}
+          Week {currentWeek} ({weekRange}) · {primaryMembership.league.name}
         </p>
       </div>
 
@@ -98,7 +100,7 @@ export default async function DashboardPage() {
       {/* Week's bets */}
       <div className="card">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Week {currentWeek} Bets</h2>
+          <h2 className="text-2xl font-bold">Week {currentWeek} Bets <span className="text-sm font-normal text-gray-400">({weekRange})</span></h2>
           <span className="text-sm text-gray-400">
             {regularBetsThisWeek.length} / 4 bets placed
           </span>

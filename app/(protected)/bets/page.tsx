@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth/session';
 import { getUserBetsForWeek, getUserLeagues } from '@/lib/db/queries';
 import { getActiveBonusBets, getUserClaimForBonusBet } from '@/lib/db/bonus-bet-queries';
-import { getWeekNumber } from '@/lib/utils/format';
+import { getWeekNumber, formatWeekRange } from '@/lib/utils/format';
 import { StructuredBetForm } from '@/components/betting/StructuredBetForm';
 import { ManualBetForm } from '@/components/betting/ManualBetForm';
 import { UserBetsList } from '@/components/betting/UserBetsList';
@@ -28,7 +28,9 @@ export default async function BetsPage({
     userLeagues[0]!;
 
   const leagueId = activeLeagueMembership.league.id;
-  const currentWeek = getWeekNumber(new Date());
+  const now = new Date();
+  const currentWeek = getWeekNumber(now);
+  const weekRange = formatWeekRange(currentWeek, now);
 
   // Fetch bets and active bonus picks in parallel
   const [userBets, activeBonusBets] = await Promise.all([
@@ -86,7 +88,7 @@ export default async function BetsPage({
           Place Your Bets
         </h1>
         <p className="text-gray-400 mt-2">
-          {activeLeagueMembership.league.name} · Week {currentWeek} · {regularSlotsFilled}/4 bets placed
+          {activeLeagueMembership.league.name} · Week {currentWeek} ({weekRange}) · {regularSlotsFilled}/4 bets placed
           {bonusBets.length > 0 && (
             <span className="text-secondary ml-2">· {bonusBets.length} bonus</span>
           )}
@@ -143,7 +145,7 @@ export default async function BetsPage({
         {/* Current Week Bets */}
         <div className="card lg:col-span-2">
           <h2 className="text-xl font-bold mb-4">
-            {activeLeagueMembership.league.name} · Week {currentWeek} Bets
+            {activeLeagueMembership.league.name} · Week {currentWeek} Bets <span className="text-sm font-normal text-gray-400">({weekRange})</span>
           </h2>
           <UserBetsList bets={userBets} />
         </div>

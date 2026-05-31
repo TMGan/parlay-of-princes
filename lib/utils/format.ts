@@ -85,6 +85,34 @@ export function formatPoints(points: number, precision = 0): string {
   return points > 0 ? `+${formatted}` : formatted;
 }
 
+/**
+ * Returns the Mon–Sun date range string for a given week number, e.g. "5/26/26–6/1/26".
+ * Pass the same Date you used to compute the week number so the year is consistent.
+ */
+export function formatWeekRange(weekNumber: number, dateInput: Date | string | number = new Date()): string {
+  const date = new Date(dateInput);
+
+  // Resolve the ET year for the reference date
+  const etYearStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+  }).format(date);
+  const year = Number(etYearStr);
+
+  const jan1 = new Date(year, 0, 1);
+  const jan1Day = jan1.getDay(); // 0=Sun … 6=Sat
+
+  // First day of this week (days offset from Jan 1)
+  const startOffset = Math.max(0, (weekNumber - 1) * 7 - jan1Day);
+  const start = new Date(year, 0, 1 + startOffset);
+  const end   = new Date(year, 0, 1 + startOffset + 6);
+
+  const fmt = (d: Date) =>
+    `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`;
+
+  return `${fmt(start)}–${fmt(end)}`;
+}
+
 export function getWeekNumber(dateInput: Date | string | number): number {
   const date = new Date(dateInput);
   if (Number.isNaN(date.getTime())) {

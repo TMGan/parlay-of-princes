@@ -7,7 +7,7 @@ import {
   getLeagueLeaderboard,
 } from '@/lib/db/queries';
 import { getLeagueActivity, getLeagueMemberBetsForWeek } from '@/lib/db/league-queries';
-import { getWeekNumber } from '@/lib/utils/format';
+import { getWeekNumber, formatWeekRange } from '@/lib/utils/format';
 import { LeagueActivityFeed } from '@/components/leagues/LeagueActivityFeed';
 import { LeagueOverview } from '@/components/leagues/LeagueOverview';
 import { LeagueLeaderboard } from '@/components/leagues/LeagueLeaderboard';
@@ -29,7 +29,9 @@ export default async function LeaguePage({
     redirect('/leagues/join');
   }
 
-  const currentWeek = getWeekNumber(new Date());
+  const now = new Date();
+  const currentWeek = getWeekNumber(now);
+  const weekRange = formatWeekRange(currentWeek, now);
 
   const [league, leaderboard, userIsAdmin, activities, weeklyPicks] = await Promise.all([
     getLeagueWithMembers(leagueId),
@@ -55,7 +57,7 @@ export default async function LeaguePage({
           {/* Week's picks — everyone's bets in the league */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Week {currentWeek} Picks</h2>
+              <h2 className="text-2xl font-bold">Week {currentWeek} Picks <span className="text-sm font-normal text-gray-400">({weekRange})</span></h2>
               <p className="text-sm text-gray-400">{weeklyPicks.length} bet{weeklyPicks.length !== 1 ? 's' : ''} placed</p>
             </div>
             <div className="card">
