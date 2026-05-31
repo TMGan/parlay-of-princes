@@ -69,6 +69,9 @@ export function UserManagementTable({ users, adminEmail, isSuperAdmin }: UserMan
       return user.email !== adminEmail;
     }
 
+    // Admins can always manage themselves
+    if (user.email === adminEmail) return true;
+
     return user.role !== 'ADMIN';
   };
 
