@@ -51,7 +51,7 @@ export default async function DashboardPage() {
     },
     {
       title: "Best Hit",
-      value: leagueBiggestHit > 0 ? `+${formatOdds(leagueBiggestHit)}` : "—",
+      value: leagueBiggestHit > 0 ? formatOdds(leagueBiggestHit) : "—",
       icon: Flame,
       color: "text-secondary",
       bgColor: "bg-secondary/10",
