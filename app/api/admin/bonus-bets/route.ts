@@ -48,27 +48,26 @@ export async function POST(req: Request) {
       createdByUserId: admin.id,
     });
 
-    // Fire-and-forget SMS to opted-in users — don't await, never blocks the response
-    prisma.user
-      .findMany({
-        where: { smsOptIn: true, phoneNumber: { not: null } },
-        select: { phoneNumber: true },
-      })
-      .then((users) => {
-        const numbers = users
-          .map((u) => u.phoneNumber!)
-          .filter((n) => n.startsWith('+'));
-        if (numbers.length === 0) return;
-        const expiryStr = expiry.toLocaleDateString('en-US', {
-          weekday: 'short', month: 'short', day: 'numeric',
-          timeZone: 'America/New_York',
-        });
-        const body =
-          `🎯 Parlay of Princes — New Bonus Pick: "${sanitizedName}" (${sanitizedSport}). ` +
-          `Claim it before ${expiryStr}. Log in now!`;
-        return sendSmsBulk(numbers, body);
-      })
-      .catch((err) => console.error('[bonus-bet sms]', err));
+    // SMS opted-in users — awaited so Vercel doesn't kill the function before it completes
+    const optedInUsers = await prisma.user.findMany({
+      where: { smsOptIn: true, phoneNumber: { not: null } },
+      select: { phoneNumber: true },
+    });
+
+    const numbers = optedInUsers
+      .map((u) => u.phoneNumber!)
+      .filter((n) => n.startsWith('+'));
+
+    if (numbers.length > 0) {
+      const expiryStr = expiry.toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        timeZone: 'America/New_York',
+      });
+      const smsBody =
+        `🎯 Parlay of Princes — New Bonus Pick: "${sanitizedName}" (${sanitizedSport}). ` +
+        `Claim it before ${expiryStr}. Log in now!`;
+      await sendSmsBulk(numbers, smsBody);
+    }
 
     return NextResponse.json({ success: true, bonusBet }, { status: 201 });
   } catch (error) {
