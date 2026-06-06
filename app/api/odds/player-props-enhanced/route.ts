@@ -62,12 +62,15 @@ const SPORT_MARKETS: Record<string, string> = {
 
   icehockey_nhl: [
     'player_points',
-    'player_shots_on_goal',
-    'player_assists',
     'player_goals',
-    'player_saves',
+    'player_assists',
+    'player_shots_on_goal',
+    'player_blocked_shots',
+    'player_total_saves',
     'player_power_play_points',
-    'player_first_goal_scorer',
+    'player_goal_scorer_anytime',
+    'player_goal_scorer_first',
+    'player_goal_scorer_last',
   ].join(','),
 
   soccer_usa_mls: [
@@ -159,11 +162,14 @@ const MARKET_LABELS: Record<string, string> = {
   player_walks:         'Walks',
 
   // NHL
-  player_goals:              'Goals',
-  player_shots_on_goal:      'Shots on Goal',
-  player_saves:              'Saves',
-  player_power_play_points:  'Power Play Pts',
-  player_first_goal_scorer:  'First Goal Scorer',
+  player_goals:               'Goals',
+  player_shots_on_goal:       'Shots on Goal',
+  player_blocked_shots:       'Blocked Shots',
+  player_total_saves:         'Total Saves',
+  player_power_play_points:   'Power Play Pts',
+  player_goal_scorer_anytime: 'Anytime Goal Scorer',
+  player_goal_scorer_first:   'First Goal Scorer',
+  player_goal_scorer_last:    'Last Goal Scorer',
 
   // Soccer
   player_to_score:        'Anytime Goalscorer',

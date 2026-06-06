@@ -47,10 +47,10 @@ const SPORT_CATEGORIES: Record<string, Category[]> = {
     { label: 'Pitching',    markets: ['player_strikeouts', 'player_hits_allowed', 'player_earned_runs', 'player_walks'] },
   ],
   icehockey_nhl: [
-    { label: 'Goals',       markets: ['player_goals', 'player_first_goal_scorer'] },
-    { label: 'Shots',       markets: ['player_shots_on_goal'] },
+    { label: 'Goals',       markets: ['player_goals', 'player_goal_scorer_anytime', 'player_goal_scorer_first', 'player_goal_scorer_last'] },
+    { label: 'Shots',       markets: ['player_shots_on_goal', 'player_blocked_shots'] },
     { label: 'Points/Ast',  markets: ['player_points', 'player_assists', 'player_power_play_points'] },
-    { label: 'Saves',       markets: ['player_saves'] },
+    { label: 'Saves',       markets: ['player_total_saves'] },
   ],
   soccer_usa_mls: [
     { label: 'Goals',       markets: ['player_to_score', 'player_first_to_score'] },
