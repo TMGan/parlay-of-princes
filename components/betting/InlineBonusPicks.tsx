@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Crown, Loader2, CheckCircle2, ChevronDown, ChevronUp, Camera, X } from 'lucide-react';
+import { etWallClockToISO } from '@/lib/utils/format';
 
 interface ActiveBonusPick {
   id: string;
@@ -130,8 +131,9 @@ function BonusPickCard({ pick, leagueId }: { pick: ActiveBonusPick; leagueId: st
       set({ error: 'Odds must be between +100 and +10000' });
       return;
     }
-    const gameStartTime = new Date(`${form.gameDate}T${form.gameTime}`);
-    if (gameStartTime <= new Date()) {
+    // Treat entered date/time as Eastern Time (AI returns ET; users enter in ET)
+    const gameStartTimeISO = etWallClockToISO(form.gameDate, form.gameTime);
+    if (new Date(gameStartTimeISO) <= new Date()) {
       set({ error: 'Game start time must be in the future' });
       return;
     }
@@ -145,7 +147,7 @@ function BonusPickCard({ pick, leagueId }: { pick: ActiveBonusPick; leagueId: st
           bonusBetId: pick.id,
           description: form.description.trim(),
           oddsAmerican: oddsNum,
-          gameStartTime: gameStartTime.toISOString(),
+          gameStartTime: gameStartTimeISO,
           leagueId,
           betSlipImage: form.slipImageDataUrl ?? undefined,
         }),

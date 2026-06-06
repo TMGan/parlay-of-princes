@@ -1,5 +1,50 @@
 export type OddsFormat = "american" | "decimal";
 
+/**
+ * Convert a date + time entered as Eastern Time wall-clock values into a UTC ISO string.
+ *
+ * Problem this solves: `new Date("YYYY-MM-DDTHH:MM")` without a timezone suffix is
+ * parsed as LOCAL time by the browser.  If the browser is not in ET, any game start
+ * time the AI returns (which is always ET) will be stored with the wrong UTC offset.
+ *
+ * Algorithm (handles both EST −5 and EDT −4 automatically via IANA database):
+ *  1. Treat the ET values as if they were UTC ("fake UTC").
+ *  2. Format that fake-UTC instant in ET to see what ET clock it actually represents.
+ *  3. The difference between step-1 and step-2 is the ET UTC offset at that moment.
+ *  4. Add the offset back → true UTC.
+ *
+ * @param dateStr "YYYY-MM-DD"
+ * @param timeStr "HH:MM"
+ * @returns ISO 8601 UTC string, e.g. "2026-06-05T23:08:00.000Z"
+ */
+export function etWallClockToISO(dateStr: string, timeStr: string): string {
+  // Step 1 — fake UTC: treat the ET clock values as if they were already UTC
+  const fakeUTC = new Date(`${dateStr}T${timeStr}:00Z`);
+  if (Number.isNaN(fakeUTC.getTime())) return new Date(0).toISOString();
+
+  // Step 2 — what ET wall clock does this fake-UTC instant correspond to?
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(fakeUTC);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+  const etAsUTC = new Date(
+    `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:00Z`
+  );
+
+  // Step 3 — offset in ms (e.g. 4 h for EDT, 5 h for EST)
+  const offsetMs = fakeUTC.getTime() - etAsUTC.getTime();
+
+  // Step 4 — true UTC = fake UTC + offset
+  return new Date(fakeUTC.getTime() + offsetMs).toISOString();
+}
+
 const DEFAULT_LOCALE = "en-US";
 
 // ─── Eastern Time helpers ────────────────────────────────────────────────────

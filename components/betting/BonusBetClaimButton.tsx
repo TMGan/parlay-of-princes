@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, Camera, X } from 'lucide-react';
+import { etWallClockToISO } from '@/lib/utils/format';
 
 type BetStatus = 'PENDING' | 'WON' | 'LOST' | 'VOIDED';
 
@@ -127,6 +128,7 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
     setError('');
 
     try {
+      // Treat entered date/time as Eastern Time (AI returns ET; users enter in ET)
       const res = await fetch('/api/bets/place-bonus', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -134,7 +136,7 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
           bonusBetId,
           description: description.trim(),
           oddsAmerican: oddsNum,
-          gameStartTime: new Date(`${gameDate}T${gameTime}`).toISOString(),
+          gameStartTime: etWallClockToISO(gameDate, gameTime),
           leagueId,
           betSlipImage: slipImageDataUrl ?? undefined,
         }),

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Camera, X } from 'lucide-react';
 import { MANUAL_SPORTS } from '@/lib/constants/sports';
+import { etWallClockToISO } from '@/lib/utils/format';
 
 interface ManualBetFormProps {
   userId: string;
@@ -133,8 +134,11 @@ export function ManualBetForm(props: ManualBetFormProps) {
         throw new Error('Description must be 500 characters or less');
       }
 
-      const gameStartTime = new Date(`${gameDate}T${gameTime}`);
-      if (isNaN(gameStartTime.getTime())) {
+      // Treat entered date/time as Eastern Time — the AI returns ET wall-clock times
+      // and users enter times in ET. Using new Date() without a timezone suffix
+      // would interpret the value as local time, which is wrong for non-ET browsers.
+      const gameStartTimeISO = etWallClockToISO(gameDate, gameTime);
+      if (gameStartTimeISO === new Date(0).toISOString()) {
         throw new Error('Invalid game time');
       }
 
@@ -145,7 +149,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
           sport: resolvedSport,
           description: description.trim(),
           oddsAmerican: oddsNumber,
-          gameStartTime: gameStartTime.toISOString(),
+          gameStartTime: gameStartTimeISO,
           isKingLock,
           leagueId,
           betSlipImage: slipImageDataUrl ?? undefined,
