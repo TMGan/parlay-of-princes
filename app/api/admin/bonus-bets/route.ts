@@ -4,7 +4,7 @@ import { createBonusBet, getAllBonusBets } from '@/lib/db/bonus-bet-queries';
 import { handleError, handleValidationError } from '@/lib/security/error-handler';
 import { sanitizeString } from '@/lib/security/validation';
 import { prisma } from '@/lib/db/client';
-import { sendSmsBulk } from '@/lib/services/sms';
+import { sendSms } from '@/lib/services/sms';
 
 export async function GET() {
   try {
@@ -58,6 +58,8 @@ export async function POST(req: Request) {
       .map((u) => u.phoneNumber!)
       .filter((n) => n.startsWith('+'));
 
+    const smsDebug: { numbersFound: number; results?: unknown } = { numbersFound: numbers.length };
+
     if (numbers.length > 0) {
       const expiryStr = expiry.toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric',
@@ -66,10 +68,15 @@ export async function POST(req: Request) {
       const smsBody =
         `🎯 Parlay of Princes — New Bonus Pick: "${sanitizedName}" (${sanitizedSport}). ` +
         `Claim it before ${expiryStr}. Log in now!`;
-      await sendSmsBulk(numbers, smsBody);
+      const results = await Promise.allSettled(
+        numbers.map((to) => sendSms(to, smsBody))
+      );
+      smsDebug.results = results.map((r) =>
+        r.status === 'fulfilled' ? r.value : { error: String(r.reason) }
+      );
     }
 
-    return NextResponse.json({ success: true, bonusBet }, { status: 201 });
+    return NextResponse.json({ success: true, bonusBet, smsDebug }, { status: 201 });
   } catch (error) {
     return handleError(error, 'Create Bonus Bet');
   }
