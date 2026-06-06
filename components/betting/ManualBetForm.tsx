@@ -31,16 +31,41 @@ export function ManualBetForm(props: ManualBetFormProps) {
   const [isParsingSlip, setIsParsingSlip] = useState(false);
   const [slipError, setSlipError] = useState('');
   const [slipSuccess, setSlipSuccess] = useState(false);
+  const [slipImageDataUrl, setSlipImageDataUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Loading & errors
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  /** Compress an image file to a JPEG data URL (max 1200px wide, 80% quality). */
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX_PX = 1200;
+        const scale = Math.min(1, MAX_PX / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve('');
+      };
+      img.src = url;
+    });
+
   const handleScreenshotUpload = async (file: File) => {
     setIsParsingSlip(true);
     setSlipError('');
     setSlipSuccess(false);
+    setSlipImageDataUrl(null);
 
     try {
       const reader = new FileReader();
@@ -53,11 +78,15 @@ export function ManualBetForm(props: ManualBetFormProps) {
         reader.readAsDataURL(file);
       });
 
-      const res = await fetch('/api/ai/parse-bet-slip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mediaType: file.type }),
-      });
+      // Parse the slip and compress for storage in parallel
+      const [res, compressed] = await Promise.all([
+        fetch('/api/ai/parse-bet-slip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, mediaType: file.type }),
+        }),
+        compressImage(file),
+      ]);
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to parse slip');
@@ -73,6 +102,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
         setGameDate(data.gameStartTime.slice(0, 10));   // "YYYY-MM-DD"
         setGameTime(data.gameStartTime.slice(11, 16));  // "HH:MM"
       }
+      if (compressed) setSlipImageDataUrl(compressed);
       setSlipSuccess(true);
       if (!isExpanded) setIsExpanded(true);
     } catch (err) {
@@ -118,6 +148,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
           gameStartTime: gameStartTime.toISOString(),
           isKingLock,
           leagueId,
+          betSlipImage: slipImageDataUrl ?? undefined,
         }),
       });
 
@@ -136,6 +167,7 @@ export function ManualBetForm(props: ManualBetFormProps) {
       setIsKingLock(false);
       setIsExpanded(false);
       setSlipSuccess(false);
+      setSlipImageDataUrl(null);
 
       router.refresh();
     } catch (err) {

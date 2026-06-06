@@ -68,6 +68,9 @@ model Bet {
   status         BetStatus @default(PENDING)
   pointsAwarded  Int?
 
+  // Compressed JPEG data URL of the bet slip screenshot (stored by the user at bet creation)
+  betSlipImage  String?
+
   gameStartTime DateTime
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

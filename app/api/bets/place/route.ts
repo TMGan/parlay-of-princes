@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return createRateLimitResponse("Too many bet attempts. Please wait 15 minutes.");
     }
 
-    const { sport, description, oddsAmerican, gameStartTime, isKingLock, leagueId } = await req.json();
+    const { sport, description, oddsAmerican, gameStartTime, isKingLock, leagueId, betSlipImage } = await req.json();
 
     const sanitizedSport = sanitizeString(sport, 50);
     const sanitizedDescription = sanitizeString(description, 500);
@@ -69,6 +69,15 @@ export async function POST(req: Request) {
       );
     }
 
+    // Validate betSlipImage: must be a data URL and stay under 2MB
+    const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+    const validatedImage =
+      typeof betSlipImage === 'string' &&
+      betSlipImage.startsWith('data:image/') &&
+      betSlipImage.length <= MAX_IMAGE_BYTES
+        ? betSlipImage
+        : null;
+
     const bet = await createBet({
       userId: user.id,
       leagueId: resolvedLeagueId,
@@ -79,6 +88,7 @@ export async function POST(req: Request) {
       oddsLocked: odds,
       isKingLock,
       gameStartTime: new Date(gameStartTime),
+      betSlipImage: validatedImage,
     });
 
     return NextResponse.json({ success: true, bet });

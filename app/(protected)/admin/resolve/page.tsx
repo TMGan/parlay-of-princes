@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/session';
 import { prisma } from '@/lib/db/client';
 import { BetResolutionForm } from '@/components/admin/BetResolutionForm';
+import { BetSlipPreview } from '@/components/admin/BetSlipPreview';
 import { BulkResolvePanel } from '@/components/admin/BulkResolvePanel';
 import { WeekSelector } from '@/components/admin/WeekSelector';
 import { ResolveUserFilter } from '@/components/admin/ResolveUserFilter';
@@ -95,7 +96,12 @@ export default async function AdminResolvePage({
                         </span>
                       )}
                     </div>
-                    <h3 className="font-semibold mb-1">{bet.description}</h3>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-semibold">{bet.description}</h3>
+                      {bet.betSlipImage && (
+                        <BetSlipPreview imageDataUrl={bet.betSlipImage} username={bet.user.username} />
+                      )}
+                    </div>
                     <p className="text-sm text-gray-400">
                       @{bet.user.username} · {formatOdds(bet.oddsLocked)} ·{' '}
                       {formatDateTimeET(bet.gameStartTime)}

@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
 
     // User supplies their specific pick + odds + game time
-    const { bonusBetId, description, oddsAmerican, gameStartTime, leagueId } = await req.json();
+    const { bonusBetId, description, oddsAmerican, gameStartTime, leagueId, betSlipImage } = await req.json();
 
     if (!bonusBetId) return handleValidationError('bonusBetId is required');
 
@@ -64,6 +64,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'You have already claimed this bonus pick' }, { status: 400 });
     }
 
+    // Validate betSlipImage: must be a data URL and stay under 2MB
+    const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+    const validatedImage =
+      typeof betSlipImage === 'string' &&
+      betSlipImage.startsWith('data:image/') &&
+      betSlipImage.length <= MAX_IMAGE_BYTES
+        ? betSlipImage
+        : null;
+
     const bet = await createBet({
       userId: user.id,
       leagueId: resolvedLeagueId,
@@ -76,6 +85,7 @@ export async function POST(req: Request) {
       isBonusBet: true,
       bonusBetId: bonusBet.id,
       gameStartTime: new Date(gameStartTime),
+      betSlipImage: validatedImage,
     });
 
     return NextResponse.json({ success: true, bet }, { status: 201 });

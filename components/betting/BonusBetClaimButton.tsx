@@ -39,6 +39,7 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
   const [isParsingSlip, setIsParsingSlip] = useState(false);
   const [slipError, setSlipError] = useState('');
   const [slipSuccess, setSlipSuccess] = useState(false);
+  const [slipImageDataUrl, setSlipImageDataUrl] = useState<string | null>(null);
 
   // User's pick fields
   const [description, setDescription] = useState('');
@@ -46,10 +47,30 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
   const [gameDate, setGameDate] = useState('');
   const [gameTime, setGameTime] = useState('20:00');
 
+  const compressImage = (file: File): Promise<string> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX_PX = 1200;
+        const scale = Math.min(1, MAX_PX / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(''); };
+      img.src = url;
+    });
+
   const handleScreenshotUpload = async (file: File) => {
     setIsParsingSlip(true);
     setSlipError('');
     setSlipSuccess(false);
+    setSlipImageDataUrl(null);
     try {
       const reader = new FileReader();
       const base64 = await new Promise<string>((resolve, reject) => {
@@ -61,11 +82,14 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
         reader.readAsDataURL(file);
       });
 
-      const res = await fetch('/api/ai/parse-bet-slip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mediaType: file.type }),
-      });
+      const [res, compressed] = await Promise.all([
+        fetch('/api/ai/parse-bet-slip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, mediaType: file.type }),
+        }),
+        compressImage(file),
+      ]);
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to parse slip');
@@ -77,6 +101,7 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
         setGameDate(data.gameStartTime.slice(0, 10));
         setGameTime(data.gameStartTime.slice(11, 16));
       }
+      if (compressed) setSlipImageDataUrl(compressed);
       setSlipSuccess(true);
       if (step !== 'form') setStep('form');
     } catch (err) {
@@ -111,6 +136,7 @@ export function BonusBetClaimButton({ bonusBetId, sport, claimed, claimedBet, le
           oddsAmerican: oddsNum,
           gameStartTime: new Date(`${gameDate}T${gameTime}`).toISOString(),
           leagueId,
+          betSlipImage: slipImageDataUrl ?? undefined,
         }),
       });
 

@@ -103,6 +103,7 @@ export async function createBet(data: {
   gameStartTime: Date;
   isBonusBet?: boolean;
   bonusBetId?: string;
+  betSlipImage?: string | null;
 }) {
   return prisma.bet.create({ data });
 }
