@@ -24,6 +24,7 @@ export function LeagueChat({ leagueId, currentUserId, isLeagueAdmin }: LeagueCha
   const [error, setError] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchMessages = useCallback(async () => {
@@ -59,7 +60,13 @@ export function LeagueChat({ leagueId, currentUserId, isLeagueAdmin }: LeagueCha
   }, [fetchMessages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll within the chat container only — not the whole page.
+    // scrollIntoView() scrolls all ancestors including the page, which would
+    // yank the user away from wherever they are on the league page.
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +137,7 @@ export function LeagueChat({ leagueId, currentUserId, isLeagueAdmin }: LeagueCha
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
         {isLoading ? (
           <div className="text-center text-gray-400 py-8">Loading messages...</div>
         ) : error && messages.length === 0 ? (
