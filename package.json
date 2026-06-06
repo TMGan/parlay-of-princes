@@ -27,7 +27,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.48.2",
-    "tailwind-merge": "2.2.0"
+    "tailwind-merge": "2.2.0",
+    "twilio": "^6.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

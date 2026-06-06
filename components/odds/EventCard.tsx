@@ -4,6 +4,20 @@ import { useState } from 'react';
 import { formatOdds, formatDateTimeET } from '@/lib/utils/format';
 import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { PlaceBetFromOdds } from './PlaceBetFromOdds';
+import { API_SPORTS } from '@/lib/constants/sports';
+
+/**
+ * Sports where we show the collapsed spread/totals quick-preview.
+ * All other sports (MLB, MLS, Golf, UFC, Boxing, NASCAR) go straight to
+ * "expand to view" — either player props or h2h are the focus there.
+ */
+const SPORTS_WITH_SPREAD_PREVIEW = new Set([
+  'americanfootball_nfl',
+  'americanfootball_ncaaf',
+  'basketball_nba',
+  'basketball_ncaab',
+  'icehockey_nhl',
+]);
 
 interface Outcome {
   name: string;
@@ -49,29 +63,69 @@ interface PlayerProp {
 
 // Human-readable market category names
 const MARKET_LABELS: Record<string, string> = {
-  player_goals: 'Goals',
-  player_shots_on_goal: 'Shots',
-  player_points: 'Points',
-  player_assists: 'Assists',
-  player_pass_tds: 'Pass TDs',
-  player_pass_yds: 'Pass Yards',
-  player_rush_yds: 'Rush Yards',
-  player_receptions: 'Receptions',
-  player_reception_yds: 'Rec Yards',
-  player_home_runs: 'Home Runs',
-  player_hits: 'Hits',
-  player_rbis: 'RBIs',
-  player_runs_scored: 'Runs',
-  player_strikeouts: 'Strikeouts',
-  player_total_bases: 'Total Bases',
-  player_rebounds: 'Rebounds',
-  player_threes: '3-Pointers',
-  player_blocks: 'Blocks',
-  player_steals: 'Steals',
+  // NFL / NCAAF
+  player_pass_tds:           'Pass TDs',
+  player_pass_yds:           'Pass Yards',
+  player_pass_attempts:      'Pass Attempts',
+  player_pass_interceptions: 'Interceptions',
+  player_rush_yds:           'Rush Yards',
+  player_receptions:         'Receptions',
+  player_reception_yds:      'Rec Yards',
+  player_anytime_td:         'Anytime TD',
+  player_kicking_points:     'Kicking Points',
+  player_sacks:              'Sacks',
+  // NBA / NCAAB
+  player_points:                  'Points',
+  player_rebounds:                'Rebounds',
+  player_assists:                 'Assists',
+  player_threes:                  '3-Pointers',
+  player_blocks:                  'Blocks',
+  player_steals:                  'Steals',
+  player_points_rebounds_assists: 'Pts+Reb+Ast',
+  player_double_double:           'Double-Double',
+  player_first_basket:            'First Basket',
+  // NHL
+  player_goals:               'Goals',
+  player_shots_on_goal:       'Shots on Goal',
+  player_blocked_shots:       'Blocked Shots',
+  player_total_saves:         'Total Saves',
+  player_power_play_points:   'Power Play Pts',
+  player_goal_scorer_anytime: 'Anytime Goal Scorer',
+  player_goal_scorer_first:   'First Goal Scorer',
+  player_goal_scorer_last:    'Last Goal Scorer',
+  // MLB — batters
+  batter_home_runs:    'Home Runs',
+  batter_hits:         'Hits',
+  batter_total_bases:  'Total Bases',
+  batter_rbis:         'RBIs',
+  batter_runs_scored:  'Runs Scored',
+  batter_walks:        'Walks (Batter)',
+  batter_strikeouts:   'K (Batter)',
+  batter_stolen_bases: 'Stolen Bases',
+  // MLB — pitchers
+  pitcher_strikeouts:   'K (Pitcher)',
+  pitcher_hits_allowed: 'Hits Allowed',
+  pitcher_earned_runs:  'Earned Runs',
+  pitcher_walks:        'Walks (Pitcher)',
+  pitcher_outs:         'Outs Recorded',
+  // Soccer (player_goal_scorer_* keys shared with NHL above)
+  player_shots_on_target: 'Shots on Target',
+  // Golf
+  golfer_win_tournament: 'Win Tournament',
+  golfer_top_5_finish:   'Top 5 Finish',
+  golfer_top_10_finish:  'Top 10 Finish',
+  golfer_top_20_finish:  'Top 20 Finish',
+  golfer_make_cut:       'Make the Cut',
 };
 
 function marketLabel(key: string) {
-  return MARKET_LABELS[key] ?? key.replace(/player_/i, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return (
+    MARKET_LABELS[key] ??
+    key
+      .replace(/^(player_|batter_|pitcher_|golfer_)/i, '')
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  );
 }
 
 /** Column label for a propType + line combo, e.g. "Over 0.5" → "Anytime", "Over 1.5" → "1.5+" */
@@ -194,11 +248,8 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
     setSelectedProp({ description, odds, gameStartTime: startTime });
   };
 
-  const sportLabel =
-    sport === 'americanfootball_nfl' ? 'NFL'
-    : sport === 'basketball_nba' ? 'NBA'
-    : sport === 'baseball_mlb' ? 'MLB'
-    : 'NHL';
+  const sportLabel = API_SPORTS.find((s) => s.key === sport)?.label ?? sport;
+  const showSpreadPreview = SPORTS_WITH_SPREAD_PREVIEW.has(sport);
 
   const propGroups = groupProps(playerProps);
   const activeGroup = propGroups.find((g) => g.marketKey === activeMarket) ?? propGroups[0] ?? null;
@@ -227,8 +278,8 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
         </button>
       </div>
 
-      {/* Quick preview */}
-      {!isExpanded && positiveOddsCount > 0 && (
+      {/* Quick preview — only for sports with meaningful spread/totals */}
+      {!isExpanded && showSpreadPreview && positiveOddsCount > 0 && (
         <div className="grid grid-cols-2 gap-4">
           {homeSpread && (
             <div className="bg-background p-3 rounded-xl">
@@ -244,12 +295,6 @@ export function EventCard({ event, sport, userId }: EventCardProps) {
               <p className="text-sm text-primary">{formatOdds(overTotal.price)}</p>
             </div>
           )}
-        </div>
-      )}
-
-      {!isExpanded && positiveOddsCount === 0 && (
-        <div className="text-center py-4 text-gray-400 text-sm">
-          No positive odds available for spreads/totals
         </div>
       )}
 

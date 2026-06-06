@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getUserById, getAllUserBets, getUserLeagues } from "@/lib/db/queries";
 import { formatPoints, formatDateET } from "@/lib/utils/format";
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
+import { PhoneSmsForm } from "@/components/profile/PhoneSmsForm";
 import { BetHistory } from "@/components/profile/BetHistory";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { TrendingUp, Trophy, Flame } from "lucide-react";
@@ -106,7 +107,13 @@ export default async function ProfilePage() {
 
       {/* Settings + Account Info */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProfileEditForm currentUsername={user.username} />
+        <div className="space-y-4">
+          <ProfileEditForm currentUsername={user.username} />
+          <PhoneSmsForm
+            currentPhone={user.phoneNumber ?? null}
+            currentOptIn={user.smsOptIn}
+          />
+        </div>
 
         <div className="card space-y-3">
           <h2 className="text-xl font-bold">Account Info</h2>

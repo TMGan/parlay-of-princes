@@ -49,15 +49,21 @@ const SPORT_MARKETS: Record<string, string> = {
   ].join(','),
 
   baseball_mlb: [
-    'player_hits',
-    'player_total_bases',
-    'player_rbis',
-    'player_runs_scored',
-    'player_strikeouts',
-    'player_home_runs',
-    'player_hits_allowed',
-    'player_earned_runs',
-    'player_walks',
+    // Batter props
+    'batter_home_runs',
+    'batter_hits',
+    'batter_total_bases',
+    'batter_rbis',
+    'batter_runs_scored',
+    'batter_walks',
+    'batter_strikeouts',
+    'batter_stolen_bases',
+    // Pitcher props
+    'pitcher_strikeouts',
+    'pitcher_hits_allowed',
+    'pitcher_earned_runs',
+    'pitcher_walks',
+    'pitcher_outs',
   ].join(','),
 
   icehockey_nhl: [
@@ -74,8 +80,8 @@ const SPORT_MARKETS: Record<string, string> = {
   ].join(','),
 
   soccer_usa_mls: [
-    'player_to_score',
-    'player_first_to_score',
+    'player_goal_scorer_anytime',
+    'player_goal_scorer_first',
     'player_shots_on_target',
   ].join(','),
 
@@ -150,16 +156,21 @@ const MARKET_LABELS: Record<string, string> = {
   player_double_double:           'Double-Double',
   player_first_basket:            'First Basket',
 
-  // MLB
-  player_hits:          'Hits',
-  player_total_bases:   'Total Bases',
-  player_rbis:          'RBIs',
-  player_runs_scored:   'Runs Scored',
-  player_strikeouts:    'Strikeouts',
-  player_home_runs:     'Home Runs',
-  player_hits_allowed:  'Hits Allowed',
-  player_earned_runs:   'Earned Runs',
-  player_walks:         'Walks',
+  // MLB — batters
+  batter_home_runs:     'Home Runs',
+  batter_hits:          'Hits',
+  batter_total_bases:   'Total Bases',
+  batter_rbis:          'RBIs',
+  batter_runs_scored:   'Runs Scored',
+  batter_walks:         'Walks (Batter)',
+  batter_strikeouts:    'Strikeouts (Batter)',
+  batter_stolen_bases:  'Stolen Bases',
+  // MLB — pitchers
+  pitcher_strikeouts:   'Strikeouts (Pitcher)',
+  pitcher_hits_allowed: 'Hits Allowed',
+  pitcher_earned_runs:  'Earned Runs',
+  pitcher_walks:        'Walks (Pitcher)',
+  pitcher_outs:         'Outs Recorded',
 
   // NHL
   player_goals:               'Goals',
@@ -171,9 +182,7 @@ const MARKET_LABELS: Record<string, string> = {
   player_goal_scorer_first:   'First Goal Scorer',
   player_goal_scorer_last:    'Last Goal Scorer',
 
-  // Soccer
-  player_to_score:        'Anytime Goalscorer',
-  player_first_to_score:  'First Goalscorer',
+  // Soccer (player_goal_scorer_* keys shared with NHL above)
   player_shots_on_target: 'Shots on Target',
 
   // Golf

@@ -3,6 +3,8 @@ import { requireAdmin } from '@/lib/auth/session';
 import { createBonusBet, getAllBonusBets } from '@/lib/db/bonus-bet-queries';
 import { handleError, handleValidationError } from '@/lib/security/error-handler';
 import { sanitizeString } from '@/lib/security/validation';
+import { prisma } from '@/lib/db/client';
+import { sendSmsBulk } from '@/lib/services/sms';
 
 export async function GET() {
   try {
@@ -45,6 +47,28 @@ export async function POST(req: Request) {
       expiryDate: expiry,
       createdByUserId: admin.id,
     });
+
+    // Fire-and-forget SMS to opted-in users — don't await, never blocks the response
+    prisma.user
+      .findMany({
+        where: { smsOptIn: true, phoneNumber: { not: null } },
+        select: { phoneNumber: true },
+      })
+      .then((users) => {
+        const numbers = users
+          .map((u) => u.phoneNumber!)
+          .filter((n) => n.startsWith('+'));
+        if (numbers.length === 0) return;
+        const expiryStr = expiry.toLocaleDateString('en-US', {
+          weekday: 'short', month: 'short', day: 'numeric',
+          timeZone: 'America/New_York',
+        });
+        const body =
+          `🎯 Parlay of Princes — New Bonus Pick: "${sanitizedName}" (${sanitizedSport}). ` +
+          `Claim it before ${expiryStr}. Log in now!`;
+        return sendSmsBulk(numbers, body);
+      })
+      .catch((err) => console.error('[bonus-bet sms]', err));
 
     return NextResponse.json({ success: true, bonusBet }, { status: 201 });
   } catch (error) {

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/grade-bets",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/picks-reminder",
+      "schedule": "0 16 * * 0"
     }
   ]
 }

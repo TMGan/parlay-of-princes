@@ -43,8 +43,8 @@ const SPORT_CATEGORIES: Record<string, Category[]> = {
     { label: 'Boards/Ast',  markets: ['player_rebounds', 'player_assists'] },
   ],
   baseball_mlb: [
-    { label: 'Batting',     markets: ['player_hits', 'player_home_runs', 'player_total_bases', 'player_rbis', 'player_runs_scored'] },
-    { label: 'Pitching',    markets: ['player_strikeouts', 'player_hits_allowed', 'player_earned_runs', 'player_walks'] },
+    { label: 'Batting',  markets: ['batter_home_runs', 'batter_hits', 'batter_total_bases', 'batter_rbis', 'batter_runs_scored', 'batter_walks', 'batter_strikeouts', 'batter_stolen_bases'] },
+    { label: 'Pitching', markets: ['pitcher_strikeouts', 'pitcher_hits_allowed', 'pitcher_earned_runs', 'pitcher_walks', 'pitcher_outs'] },
   ],
   icehockey_nhl: [
     { label: 'Goals',       markets: ['player_goals', 'player_goal_scorer_anytime', 'player_goal_scorer_first', 'player_goal_scorer_last'] },
@@ -53,8 +53,8 @@ const SPORT_CATEGORIES: Record<string, Category[]> = {
     { label: 'Saves',       markets: ['player_total_saves'] },
   ],
   soccer_usa_mls: [
-    { label: 'Goals',       markets: ['player_to_score', 'player_first_to_score'] },
-    { label: 'Shots',       markets: ['player_shots_on_target'] },
+    { label: 'Goals', markets: ['player_goal_scorer_anytime', 'player_goal_scorer_first'] },
+    { label: 'Shots', markets: ['player_shots_on_target'] },
   ],
   golf_pga_tour: [
     { label: 'Outright',    markets: ['golfer_win_tournament', 'golfer_top_5_finish', 'golfer_top_10_finish', 'golfer_top_20_finish', 'golfer_make_cut'] },

@@ -19,6 +19,10 @@ model User {
   
   avatarUrl   String?
 
+  // SMS notifications
+  phoneNumber String?
+  smsOptIn    Boolean @default(false)
+
   totalPoints Int @default(0)
   betsWon     Int @default(0)
   betsLost    Int @default(0)
