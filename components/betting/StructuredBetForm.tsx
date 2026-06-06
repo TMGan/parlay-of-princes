@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { PropGrid, type PlayerProp } from '@/components/betting/PropGrid';
+import { API_SPORTS as SPORTS } from '@/lib/constants/sports';
+import { formatDateTimeET } from '@/lib/utils/format';
 
 interface StructuredBetFormProps {
   userId: string;
@@ -19,19 +22,6 @@ interface Game {
   commenceTime: string;
   sport: string;
 }
-
-interface PlayerProp {
-  id: string;
-  description: string;
-  odds: number;
-  playerName: string;
-  propType: string;
-  line: number | null;
-  marketName: string;
-}
-
-import { API_SPORTS as SPORTS } from '@/lib/constants/sports';
-import { formatDateTimeET } from '@/lib/utils/format';
 
 export function StructuredBetForm(props: StructuredBetFormProps) {
   const { canPlaceRegularBet, canPlaceKingLock, leagueId } = props;
@@ -245,12 +235,13 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
       {/* Step 3: Select Player Prop */}
       {step === 'prop' && (
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium">Step 3: Select Player Prop</label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-medium">Step 3: Select Prop</label>
             <button
               onClick={() => {
                 setStep('game');
                 setSelectedGame(null);
+                setSelectedProp(null);
                 setPlayerProps([]);
               }}
               className="px-4 py-2 text-sm bg-secondary/80 text-gray-900 font-semibold rounded-full hover:bg-secondary transition-colors"
@@ -268,27 +259,13 @@ export function StructuredBetForm(props: StructuredBetFormProps) {
               {error || 'No props available for this game'}
             </p>
           ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {playerProps.map((prop) => (
-                <button
-                  key={prop.id}
-                  onClick={() => setSelectedProp(prop)}
-                  className={`w-full p-3 rounded-xl border transition-colors text-left ${
-                    selectedProp?.id === prop.id
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-background border-gray-800 hover:border-primary'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{prop.description}</div>
-                      <div className="text-xs text-gray-400 mt-1">{prop.marketName}</div>
-                    </div>
-                    <div className="text-primary font-bold ml-2">+{prop.odds}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <PropGrid
+              key={selectedSport}
+              props={playerProps}
+              sport={selectedSport}
+              selectedProp={selectedProp}
+              onSelect={setSelectedProp}
+            />
           )}
         </div>
       )}
