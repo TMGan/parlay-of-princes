@@ -280,11 +280,19 @@ export async function GET(req: Request) {
 
     const data = (await response.json()) as OddsData;
 
-    // Try each bookmaker in order until we find one with props
-    let props: PlayerProp[] = [];
+    // Merge props from ALL bookmakers so no market is missed because one
+    // bookmaker (e.g. FanDuel) doesn't carry it. Deduplicate by
+    // marketKey + playerName + propType + line — first bookmaker wins.
+    const seen = new Set<string>();
+    const props: PlayerProp[] = [];
     for (const bookmaker of data.bookmakers ?? []) {
-      props = extractProps(bookmaker);
-      if (props.length > 0) break;
+      for (const prop of extractProps(bookmaker)) {
+        const key = `${prop.marketKey}|${prop.playerName}|${prop.propType}|${prop.line ?? 'x'}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          props.push(prop);
+        }
+      }
     }
 
     setCached(cacheKey, props);
