@@ -72,7 +72,7 @@ function getPositionHint(
 
   if (tab === 'points') {
     const diff = above.totalPoints - current.totalPoints;
-    return { text: `Need +${formatPoints(diff)} pts to pass ${above.username}`, className: 'text-yellow-500' };
+    return { text: `Need ${formatPoints(diff)} pts to pass ${above.username}`, className: 'text-yellow-500' };
   }
   if (tab === 'wins') {
     const diff = above.betsWon - current.betsWon;
