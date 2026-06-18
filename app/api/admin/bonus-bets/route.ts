@@ -58,8 +58,6 @@ export async function POST(req: Request) {
       .map((u) => u.phoneNumber!)
       .filter((n) => n.startsWith('+'));
 
-    const smsDebug: { numbersFound: number; results?: unknown } = { numbersFound: numbers.length };
-
     if (numbers.length > 0) {
       const expiryStr = expiry.toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric',
@@ -68,15 +66,10 @@ export async function POST(req: Request) {
       const smsBody =
         `🎯 Parlay of Princes — New Bonus Pick: "${sanitizedName}" (${sanitizedSport}). ` +
         `Claim it before ${expiryStr}. Log in now!`;
-      const results = await Promise.allSettled(
-        numbers.map((to) => sendSms(to, smsBody))
-      );
-      smsDebug.results = results.map((r) =>
-        r.status === 'fulfilled' ? r.value : { error: String(r.reason) }
-      );
+      await Promise.allSettled(numbers.map((to) => sendSms(to, smsBody)));
     }
 
-    return NextResponse.json({ success: true, bonusBet, smsDebug }, { status: 201 });
+    return NextResponse.json({ success: true, bonusBet }, { status: 201 });
   } catch (error) {
     return handleError(error, 'Create Bonus Bet');
   }
