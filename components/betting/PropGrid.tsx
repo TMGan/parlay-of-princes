@@ -56,6 +56,10 @@ const SPORT_CATEGORIES: Record<string, Category[]> = {
     { label: 'Goals', markets: ['player_goal_scorer_anytime', 'player_goal_scorer_first'] },
     { label: 'Shots', markets: ['player_shots_on_target'] },
   ],
+  soccer_fifa_world_cup: [
+    { label: 'Goals', markets: ['player_goal_scorer_anytime', 'player_goal_scorer_first'] },
+    { label: 'Shots', markets: ['player_shots_on_target'] },
+  ],
   golf_pga_tour: [
     { label: 'Outright',    markets: ['golfer_win_tournament', 'golfer_top_5_finish', 'golfer_top_10_finish', 'golfer_top_20_finish', 'golfer_make_cut'] },
   ],

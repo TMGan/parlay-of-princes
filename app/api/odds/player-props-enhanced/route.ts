@@ -85,6 +85,12 @@ const SPORT_MARKETS: Record<string, string> = {
     'player_shots_on_target',
   ].join(','),
 
+  soccer_fifa_world_cup: [
+    'player_goal_scorer_anytime',
+    'player_goal_scorer_first',
+    'player_shots_on_target',
+  ].join(','),
+
   mma_mixed_martial_arts: 'h2h',
   boxing_boxing:          'h2h',
   motorsport_nascar_cup_series: 'h2h',

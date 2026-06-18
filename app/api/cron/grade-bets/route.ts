@@ -67,8 +67,9 @@ function sportToOddsApiKeys(sport: string): string[] {
   if (s.includes('mma') || s.includes('ufc'))
     return ['mma_mixed_martial_arts'];
 
-  if (s.includes('soccer') || s.includes('mls') || s.includes('football'))
+  if (s.includes('soccer') || s.includes('mls') || s.includes('world cup') || s.includes('football'))
     return [
+      'soccer_fifa_world_cup',
       'soccer_usa_mls',
       'soccer_epl',
       'soccer_uefa_champs_league',

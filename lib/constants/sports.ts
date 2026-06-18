@@ -7,6 +7,7 @@ export const API_SPORTS = [
   { key: 'baseball_mlb',                 label: 'MLB' },
   { key: 'icehockey_nhl',                label: 'NHL' },
   { key: 'soccer_usa_mls',               label: 'MLS Soccer' },
+  { key: 'soccer_fifa_world_cup',        label: 'World Cup 2026' },
   { key: 'mma_mixed_martial_arts',       label: 'UFC / MMA' },
   { key: 'boxing_boxing',                label: 'Boxing' },
   { key: 'golf_pga_tour',                label: 'PGA Golf' },
