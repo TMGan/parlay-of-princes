@@ -12,12 +12,13 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const sport = searchParams.get("sport") || "americanfootball_nfl"
 
-    // Golf uses outright winner markets; NASCAR uses h2h (race winner);
-    // everything else has spreads + totals.
-    const markets =
-      sport === "golf_pga_tour" ? "outrights"
-      : sport === "motorsport_nascar_cup_series" ? "h2h"
-      : "h2h,spreads,totals"
+    // Golf, NASCAR, MMA, Boxing use h2h only; everything else includes spreads + totals.
+    const isMatchupOnly =
+      sport === "golf_pga_tour" ||
+      sport === "motorsport_nascar_cup_series" ||
+      sport === "mma_mixed_martial_arts" ||
+      sport === "boxing_boxing"
+    const markets = isMatchupOnly ? "h2h" : "h2h,spreads,totals"
 
     const response = await fetch(
       `${ODDS_API_BASE}/sports/${sport}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=${markets}&oddsFormat=american`,
@@ -26,15 +27,17 @@ export async function GET(req: Request) {
       }
     )
 
+    // Non-OK means no active events for this sport — return empty so the UI
+    // shows "No Games Available" instead of an error banner.
     if (!response.ok) {
-      throw new Error("Failed to fetch events")
+      return NextResponse.json([])
     }
 
     const data = await response.json()
 
-    return NextResponse.json(data)
+    return NextResponse.json(Array.isArray(data) ? data : [])
   } catch (error) {
     console.error("Error fetching events:", error)
-    return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })
+    return NextResponse.json([])
   }
 }
