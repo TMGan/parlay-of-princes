@@ -26,8 +26,10 @@ export async function GET() {
 
     const data = (await response.json()) as ApiSport[];
 
+    // Temporarily return all active soccer sports so we can identify the World Cup key.
+    // Revert this filter after confirming the correct key.
     const supportedSports = data.filter((sport: ApiSport) =>
-      ["americanfootball_nfl", "basketball_nba", "baseball_mlb", "icehockey_nhl"].includes(sport.key)
+      sport.active && sport.key.startsWith("soccer_")
     );
 
     return NextResponse.json(supportedSports);

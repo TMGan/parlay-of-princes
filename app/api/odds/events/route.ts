@@ -12,8 +12,15 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const sport = searchParams.get("sport") || "americanfootball_nfl"
 
+    // Golf uses outright winner markets; NASCAR uses h2h (race winner);
+    // everything else has spreads + totals.
+    const markets =
+      sport === "golf_pga_tour" ? "outrights"
+      : sport === "motorsport_nascar_cup_series" ? "h2h"
+      : "h2h,spreads,totals"
+
     const response = await fetch(
-      `${ODDS_API_BASE}/sports/${sport}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`,
+      `${ODDS_API_BASE}/sports/${sport}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=${markets}&oddsFormat=american`,
       {
         next: { revalidate: 300 }
       }

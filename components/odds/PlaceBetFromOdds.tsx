@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { formatOdds, formatDateTimeET } from "@/lib/utils/format"
@@ -14,11 +14,40 @@ interface PlaceBetFromOddsProps {
   onClose: () => void
 }
 
+interface ActiveBonusBet {
+  id: string
+  name: string
+  description: string
+  sport: string
+  claimed: boolean
+}
+
 export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onClose }: PlaceBetFromOddsProps) {
   const router = useRouter()
   const [isKingLock, setIsKingLock] = useState(false)
+  const [isBonusBet, setIsBonusBet] = useState(false)
+  const [activeBonusBet, setActiveBonusBet] = useState<ActiveBonusBet | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("/api/bonus-bets/active")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.claimed) setActiveBonusBet(data)
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleKingLockChange = (checked: boolean) => {
+    setIsKingLock(checked)
+    if (checked) setIsBonusBet(false)
+  }
+
+  const handleBonusChange = (checked: boolean) => {
+    setIsBonusBet(checked)
+    if (checked) setIsKingLock(false)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,16 +55,26 @@ export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onCl
     setError("")
 
     try {
-      const response = await fetch("/api/bets/place", {
+      const endpoint = isBonusBet ? "/api/bets/place-bonus" : "/api/bets/place"
+      const body = isBonusBet
+        ? {
+            bonusBetId: activeBonusBet!.id,
+            description,
+            oddsAmerican: odds,
+            gameStartTime: gameStartTime.toISOString(),
+          }
+        : {
+            sport,
+            description,
+            oddsAmerican: odds,
+            gameStartTime: gameStartTime.toISOString(),
+            isKingLock,
+          }
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sport,
-          description,
-          oddsAmerican: odds,
-          gameStartTime: gameStartTime.toISOString(),
-          isKingLock
-        })
+        body: JSON.stringify(body),
       })
 
       if (!response.ok) {
@@ -47,12 +86,13 @@ export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onCl
       router.refresh()
       router.push("/bets")
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to place bet")
-      setError(error.message)
+      setError(err instanceof Error ? err.message : "Failed to place bet")
     } finally {
       setIsLoading(false)
     }
   }
+
+  const effectivePoints = isBonusBet ? odds : isKingLock ? odds * 2 : odds
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -78,7 +118,7 @@ export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onCl
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Bet</span>
-              <span className="font-semibold">{description}</span>
+              <span className="font-semibold text-right max-w-[60%]">{description}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Odds</span>
@@ -90,12 +130,13 @@ export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onCl
             </div>
           </div>
 
+          {/* King Lock */}
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
               id="kingLockOdds"
               checked={isKingLock}
-              onChange={(e) => setIsKingLock(e.target.checked)}
+              onChange={(e) => handleKingLockChange(e.target.checked)}
               className="w-4 h-4"
             />
             <label htmlFor="kingLockOdds" className="text-sm">
@@ -103,9 +144,27 @@ export function PlaceBetFromOdds({ sport, description, odds, gameStartTime, onCl
             </label>
           </div>
 
+          {/* Bonus Pick — only shown if there's an active unclaimed bonus bet */}
+          {activeBonusBet && (
+            <div className="flex items-start space-x-2 p-3 rounded-xl border border-secondary/30 bg-secondary/5">
+              <input
+                type="checkbox"
+                id="bonusBetOdds"
+                checked={isBonusBet}
+                onChange={(e) => handleBonusChange(e.target.checked)}
+                className="w-4 h-4 mt-0.5"
+              />
+              <label htmlFor="bonusBetOdds" className="text-sm cursor-pointer">
+                Use as 🎯 <span className="font-bold text-secondary">Bonus Pick</span>
+                <span className="block text-xs text-gray-400 mt-0.5">{activeBonusBet.name}</span>
+              </label>
+            </div>
+          )}
+
           <div className="bg-primary/10 border border-primary p-4 rounded">
             <p className="text-sm text-gray-400 mb-1">Potential Points</p>
-            <p className="text-2xl font-bold text-primary">+{isKingLock ? odds * 2 : odds} pts</p>
+            <p className="text-2xl font-bold text-primary">+{effectivePoints} pts</p>
+            {isKingLock && <p className="text-xs text-gray-400 mt-1">King Lock 2× multiplier applied</p>}
           </div>
 
           <div className="flex space-x-3">
