@@ -12,9 +12,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const sport = searchParams.get("sport") || "americanfootball_nfl"
 
-    // Golf, NASCAR, MMA, Boxing use h2h only; everything else includes spreads + totals.
+    // Golf (winner key), NASCAR, MMA, Boxing use h2h only; everything else includes spreads + totals.
     const isMatchupOnly =
-      sport === "golf_pga_tour" ||
+      sport === "golf_pga_tour_winner" ||
       sport === "motorsport_nascar_cup_series" ||
       sport === "mma_mixed_martial_arts" ||
       sport === "boxing_boxing"

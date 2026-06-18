@@ -10,7 +10,7 @@ export const API_SPORTS = [
   { key: 'soccer_fifa_world_cup',        label: 'World Cup 2026' },
   { key: 'mma_mixed_martial_arts',       label: 'UFC / MMA' },
   { key: 'boxing_boxing',                label: 'Boxing' },
-  { key: 'golf_pga_tour',                label: 'PGA Golf' },
+  { key: 'golf_pga_tour_winner',          label: 'PGA Golf' },
   { key: 'motorsport_nascar_cup_series', label: 'NASCAR' },
 ] as const;
 

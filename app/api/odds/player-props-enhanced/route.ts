@@ -95,7 +95,7 @@ const SPORT_MARKETS: Record<string, string> = {
   boxing_boxing:          'h2h',
   motorsport_nascar_cup_series: 'h2h',
 
-  golf_pga_tour: [
+  golf_pga_tour_winner: [
     'golfer_win_tournament',
     'golfer_top_5_finish',
     'golfer_top_10_finish',
