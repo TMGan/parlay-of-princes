@@ -46,12 +46,12 @@ export function OddsBrowser({ userId }: OddsBrowserProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex space-x-4">
+      <div className="flex flex-wrap gap-2">
         {sports.map((sport) => (
           <button
             key={sport.key}
             onClick={() => setSelectedSport(sport.key)}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
               selectedSport === sport.key ? "bg-primary text-white" : "bg-background-light text-gray-400 hover:text-white"
             }`}
           >
